@@ -5,12 +5,14 @@ compatibility_date = "2025-12-21"
 [observability]
 enabled = true
 
-# Smart Placement (opcional)
-# [placement]
-# mode = "smart"
-
 [vars]
 SUPABASE_URL = "https://ckcozmrongodmgxcnxap.supabase.co"
+
+[env.prod]
+name = "storecheck-backend-prod"
+
+[env.dev]
+name = "storecheck-backend-dev"
 
 # Static Assets (opcional)
 # [assets]
