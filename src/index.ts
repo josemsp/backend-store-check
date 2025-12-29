@@ -31,11 +31,11 @@ const app = new Hono<AppContext>();
 app.use('*', logger());
 
 // 2. CORS middleware (important for Workers)
-// app.use('*', cors({
-// 	origin: '*', // Adjust according to your needs
-// 	allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-// 	allowHeaders: ['Content-Type', 'Authorization'],
-// }));
+app.use('*', cors({
+	origin: '*', // Adjust according to your needs
+	allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+	allowHeaders: ['Content-Type', 'Authorization'],
+}));
 
 // 3. Error middleware
 app.onError(errorMiddleware);
@@ -64,7 +64,7 @@ const registry = PluginRegistry.create()
 registry.install(openapi);
 
 // 7. Error management: 404 Not Found
-app.notFound((c) => c.json({ message: 'Not Foundxxx' }, 404));
+app.notFound((c) => c.json({ message: 'Not Found' }, 404));
 
 // 8. Export worker
 export default app;

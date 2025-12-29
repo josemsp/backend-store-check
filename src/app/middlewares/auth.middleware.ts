@@ -7,7 +7,7 @@ export const authMiddleware: MiddlewareHandler<AppContext> = async (c, next) => 
     const authHeader = c.req.header('Authorization');
 
     if (!authHeader?.startsWith('Bearer ')) {
-        return c.json({ error: "Unauthorizedattt" }, 401);
+        return c.json({ error: "Unauthorized" }, 401);
     }
 
     const token = authHeader.replace('Bearer ', '');
@@ -40,7 +40,7 @@ export const authMiddleware: MiddlewareHandler<AppContext> = async (c, next) => 
         await next();
     } catch (error) {
         console.error('Auth Error:', error);
-        return c.json({ error: "Unauthorizedvvv" }, 401);
+        return c.json({ error: "Unauthorized" }, 401);
     }
 }
 
