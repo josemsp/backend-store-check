@@ -1,0 +1,50 @@
+name = "backend-store-check"
+main = "src/index.ts"
+compatibility_date = "2025-12-21"
+
+[observability]
+enabled = true
+
+# Smart Placement (opcional)
+# [placement]
+# mode = "smart"
+
+[vars]
+SUPABASE_URL = "https://ckcozmrongodmgxcnxap.supabase.co"
+
+# Static Assets (opcional)
+# [assets]
+# directory = "./public"
+# binding = "ASSETS"
+
+# Service Bindings (opcional)
+# [[services]]
+# binding = "SUPABASE"
+# service = "ckcozmrongodmgxcnxap"
+
+# [[queues.producers]]
+# binding = "QUEUE_AI_RESTOCK"
+# queue = "ai-restock"
+
+# [[queues.producers]]
+# binding = "QUEUE_NOTIFY"
+# queue = "notify"
+
+# [[queues.producers]]
+# binding = "QUEUE_LOGISTICS"
+# queue = "logistics"
+
+# [[queues.consumers]]
+# queue = "ai-restock"
+# max_batch_size = 10
+# max_batch_timeout = 5
+
+# [[queues.consumers]]
+# queue = "notify"
+# max_batch_size = 10
+# max_batch_timeout = 5
+
+# [[queues.consumers]]
+# queue = "logistics"
+# max_batch_size = 10
+# max_batch_timeout = 5
