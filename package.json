@@ -11,16 +11,20 @@
 		"supabase:types": "npx --yes supabase@latest gen types typescript --project-id ckcozmrongodmgxcnxap --schema public,core,inventory,events > src/shared/supabase/types.ts"
 	},
 	"devDependencies": {
-		"@cloudflare/vitest-pool-workers": "^0.8.19",
+		"@cloudflare/vitest-pool-workers": "^0.12.4",
+		"@types/react": "^19.2.8",
+		"react": "^19.2.3",
 		"typescript": "^5.5.2",
-		"vitest": "~3.2.0",
-		"wrangler": "^4.56.0"
+		"vitest": "~4.0.17",
+		"wrangler": "^4.59.2"
 	},
 	"dependencies": {
+		"@react-email/render": "^2.0.2",
 		"@supabase/supabase-js": "^2.89.0",
-		"chanfana": "^2.8.3",
+		"chanfana": "^3.0.0",
 		"hono": "^4.11.1",
-		"zod": "^3.24.1"
+		"resend": "^6.7.0",
+		"zod": "^4.3.5"
 	},
-	"packageManager": "pnpm@10.15.0"
+	"packageManager": "pnpm@10.28.0"
 }

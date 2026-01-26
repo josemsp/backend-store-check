@@ -1,14 +1,13 @@
 import { z } from "zod";
-import { Database } from "../../shared/supabase/types";
 
-export const UserSchemaDB = z.object({
+export const UserDBSchema = z.object({
     id: z.uuid(),
     email: z.email(),
     first_name: z.string().nullable(),
     last_name: z.string().nullable(),
     full_name: z.string().nullable(),
     avatar_url: z.string().nullable(),
-    status: z.enum(['active', 'inactive', 'deleted']).default('active'),
+    status: z.enum(['active', 'inactive', 'deleted']),
     company_id: z.uuid().nullable(),
     company_name: z.string().nullable(),
     is_root: z.boolean(),
@@ -17,51 +16,53 @@ export const UserSchemaDB = z.object({
     roles: z.array(z.object({
         id: z.uuid(),
         name: z.string(),
-        is_system_role: z.boolean()
+        description: z.string(),
+        is_system_role: z.boolean(),
     })),
-    created_at: z.string(),
-    updated_at: z.string(),
+    created_at: z.iso.datetime(),
+    updated_at: z.iso.datetime(),
 });
 
-export const UserProfileSchema = z.object({
-    id: z.uuid(),
+export const UserAPISchema = UserDBSchema.transform(data => ({
+    id: data.id,
+    email: data.email,
+    firstName: data.first_name,
+    lastName: data.last_name,
+    fullName: data.full_name,
+    avatarUrl: data.avatar_url,
+    status: data.status,
+    companyId: data.company_id,
+    companyName: data.company_name,
+    isRoot: data.is_root,
+    isOwner: data.is_owner,
+    permissions: data.permissions,
+    roles: data.roles.map(r => ({
+        id: r.id,
+        name: r.name,
+        description: r.description,
+        isSystemRole: r.is_system_role,
+    })),
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+}));
+
+export const CreateUserAPISchema = z.object({
     email: z.email(),
     firstName: z.string().nullable(),
     lastName: z.string().nullable(),
-    fullName: z.string().nullable(),
     avatarUrl: z.string().nullable(),
     status: z.enum(['active', 'inactive', 'deleted']).default('active'),
-    companyId: z.uuid().nullable(),
-    companyName: z.string().nullable(),
-    isRoot: z.boolean(),
-    permissions: z.array(z.string()),
-    roles: z.array(z.object({
-        id: z.uuid(),
-        name: z.string(),
-        is_system_role: z.boolean()
-    })),
-    createdAt: z.string(),
-    updatedAt: z.string(),
 });
 
-export type UserTypeZod = z.infer<typeof UserSchemaDB>;
+export const CreateUserDBSchema = CreateUserAPISchema.transform(data => ({
+    email: data.email,
+    first_name: data.firstName,
+    last_name: data.lastName,
+    avatar_url: data.avatarUrl,
+    status: data.status,
+}));
 
-export type CreateUserFromZod = Omit<UserTypeZod, 'id' | 'created_at' | 'updated_at'>;
-
-export type UserProfileData = Database['core']['Views']['v_user_profiles']['Row'];
-
-// Compare UserProfileData with UserFromZod.
-const itShouldBeOk = UserSchemaDB as z.ZodType<UserProfileData>;
-
-export const CreateUserSchema = UserSchemaDB
-    .omit({ id: true, created_at: true, updated_at: true })
-    .extend({
-        status: z.enum(['active', 'inactive', 'deleted']).default('active'),
-    });
-
-export const UpdateUserSchema = CreateUserSchema.partial();
-
-export type UpdateUserFromZod = z.infer<typeof UpdateUserSchema>;
+export const UpdateUserDBSchema = CreateUserAPISchema.partial();
 
 // pagination + filters
 export const ListProfilesSchema = z.object({
@@ -77,8 +78,6 @@ export const ListProfilesSchema = z.object({
     sortBy: z.enum(["created_at", "first_name"]).default("created_at"),
     sortDir: z.enum(["asc", "desc"]).default("desc"),
 });
-
-export type ListProfilesParams = z.infer<typeof ListProfilesSchema>;
 
 export const PaginationQuerySchema = z.object({
     page: z.coerce.number().int().min(1).default(1),
@@ -99,7 +98,7 @@ export const UserProfileFiltersSchema = z.object({
 export const ListUserProfilesQuerySchema = PaginationQuerySchema.merge(UserProfileFiltersSchema);
 
 export const PaginatedUserProfilesSchema = z.object({
-    data: z.array(UserSchemaDB),
+    data: z.array(UserDBSchema),
     pagination: z.object({
         page: z.number(),
         limit: z.number(),
@@ -109,8 +108,3 @@ export const PaginatedUserProfilesSchema = z.object({
         has_prev: z.boolean(),
     }),
 });
-
-
-export type ListUserProfilesQuery = z.infer<typeof ListUserProfilesQuerySchema>;
-
-export type PaginatedUserProfiles = z.infer<typeof PaginatedUserProfilesSchema>;

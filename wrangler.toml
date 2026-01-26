@@ -1,52 +1,24 @@
-name = "backend-store-check"
 main = "src/index.ts"
 compatibility_date = "2025-12-21"
 
 [observability]
 enabled = true
 
+# Default (no usar en prod)
 [vars]
 SUPABASE_URL = "https://ckcozmrongodmgxcnxap.supabase.co"
-
-[env.prod]
-name = "storecheck-backend-prod"
+FRONTEND_URL = "http://localhost:5173"
 
 [env.dev]
-name = "storecheck-backend-dev"
+name = "backend-store-check-dev"
 
-# Static Assets (opcional)
-# [assets]
-# directory = "./public"
-# binding = "ASSETS"
+[env.dev.vars]
+SUPABASE_URL = "https://ckcozmrongodmgxcnxap.supabase.co"
+FRONTEND_URL = "http://localhost:5173"
 
-# Service Bindings (opcional)
-# [[services]]
-# binding = "SUPABASE"
-# service = "ckcozmrongodmgxcnxap"
+[env.prod]
+name = "backend-store-check-prod"
 
-# [[queues.producers]]
-# binding = "QUEUE_AI_RESTOCK"
-# queue = "ai-restock"
-
-# [[queues.producers]]
-# binding = "QUEUE_NOTIFY"
-# queue = "notify"
-
-# [[queues.producers]]
-# binding = "QUEUE_LOGISTICS"
-# queue = "logistics"
-
-# [[queues.consumers]]
-# queue = "ai-restock"
-# max_batch_size = 10
-# max_batch_timeout = 5
-
-# [[queues.consumers]]
-# queue = "notify"
-# max_batch_size = 10
-# max_batch_timeout = 5
-
-# [[queues.consumers]]
-# queue = "logistics"
-# max_batch_size = 10
-# max_batch_timeout = 5
+[env.prod.vars]
+SUPABASE_URL = "https://ckcozmrongodmgxcnxap.supabase.co"
+FRONTEND_URL = "https://store-check.com"

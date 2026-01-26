@@ -1,45 +1,37 @@
-import { contentJson, OpenAPIRoute, OpenAPIRouteSchema } from 'chanfana';
 import { Context } from 'hono';
 import { z } from 'zod';
 import { HealthService } from './health.service';
-import { AppContext } from '../../shared/supabase';
-import { createAnonClient } from '../../infra/supabase/anon.client';
+import { AppContext } from '../../shared/supabase/general';
+import { BaseController } from '../../shared/utils/base.controller';
+import { serverError, successResponse } from '../../shared/utils/response';
 
-export class HealthCheckController extends OpenAPIRoute {
-    schema: OpenAPIRouteSchema = {
+const HealthCheckAPISchema = z.object({
+    database: z.object({
+        status: z.string(),
+        latency: z.string(),
+    })
+})
+
+export class HealthCheckController extends BaseController {
+    schema = {
         tags: ['System'],
         summary: 'Check API and Database health',
-        responses: {
-            '200': {
-                description: 'System is healthy',
-                ...contentJson(
-                    z.object({
-                        uptime: z.string(),
-                        database: z.object({
-                            status: z.string(),
-                            latency: z.string(),
-                        }),
-                    })
-                )
-            },
-            '503': {
-                description: 'Service Unavailable',
-            },
-        },
+        responses: this.createStandardResponses(HealthCheckAPISchema, {
+            successDescription: 'System is healthy',
+            include400: true,
+            include404: true,
+        }),
     };
 
     async handle(c: Context<AppContext>) {
-        const service = new HealthService(createAnonClient(c.env));
+        const service = new HealthService(c.get('supabase'));
 
         try {
             const dbStatus = await service.checkDatabase();
 
-            return c.json({ database: dbStatus, }, 200);
+            return successResponse(c, { database: dbStatus, });
         } catch (error: any) {
-            return c.json({
-                status: 'error',
-                message: error.message,
-            }, 503);
+            return serverError(c, error);
         }
     }
 }

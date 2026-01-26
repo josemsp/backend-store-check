@@ -1,10 +1,10 @@
-import { createPublicPlugin } from "../../app/routing/secure-router";
+import { WorkerModule } from "../../app/routing/worker.module.registry";
 import { HealthCheckController } from "./health.controller";
 
-export const healthPlugin = createPublicPlugin('health', '/', [
-    {
-        method: 'get',
-        path: 'health',
-        controller: HealthCheckController,
-    },
-]);
+export const healthPlugin: WorkerModule = {
+    name: 'health',
+    basePath: '/api/v1/health',
+    routes: [
+        { method: 'get', path: '/', handler: HealthCheckController }
+    ]
+};

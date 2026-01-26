@@ -128,25 +128,124 @@ export type Database = {
           },
         ]
       }
-      permissions: {
+      invitations: {
         Row: {
-          description: string
+          accepted_at: string | null
+          company_id: string | null
+          created_at: string | null
+          email: string
+          expires_at: string
           id: string
+          invited_by: string
+          role_id: string
+          token: string
         }
         Insert: {
-          description: string
-          id: string
+          accepted_at?: string | null
+          company_id?: string | null
+          created_at?: string | null
+          email: string
+          expires_at: string
+          id?: string
+          invited_by: string
+          role_id: string
+          token: string
         }
         Update: {
-          description?: string
+          accepted_at?: string | null
+          company_id?: string | null
+          created_at?: string | null
+          email?: string
+          expires_at?: string
           id?: string
+          invited_by?: string
+          role_id?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invitations_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      owner_invitations: {
+        Row: {
+          created_at: string | null
+          email: string
+          expires_at: string
+          id: string
+          status: string | null
+          token: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          expires_at: string
+          id?: string
+          status?: string | null
+          token: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          expires_at?: string
+          id?: string
+          status?: string | null
+          token?: string
+        }
+        Relationships: []
+      }
+      permissions: {
+        Row: {
+          description: string | null
+          id: string
+          key: Database["core"]["Enums"]["permission_key"]
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          key: Database["core"]["Enums"]["permission_key"]
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          key?: Database["core"]["Enums"]["permission_key"]
+        }
+        Relationships: []
+      }
+      platform_users: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: string
+        }
+        Insert: {
+          created_at?: string | null
+          id: string
+          role: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: string
         }
         Relationships: []
       }
       profiles: {
         Row: {
           avatar_url: string | null
-          company_id: string
+          company_id: string | null
           created_at: string | null
           deleted_at: string | null
           email: string
@@ -154,13 +253,12 @@ export type Database = {
           full_name: string | null
           id: string
           last_name: string | null
-          role_id: string
-          status: string
+          status: Database["core"]["Enums"]["user_status"]
           updated_at: string | null
         }
         Insert: {
           avatar_url?: string | null
-          company_id: string
+          company_id?: string | null
           created_at?: string | null
           deleted_at?: string | null
           email: string
@@ -168,13 +266,12 @@ export type Database = {
           full_name?: string | null
           id: string
           last_name?: string | null
-          role_id: string
-          status?: string
+          status?: Database["core"]["Enums"]["user_status"]
           updated_at?: string | null
         }
         Update: {
           avatar_url?: string | null
-          company_id?: string
+          company_id?: string | null
           created_at?: string | null
           deleted_at?: string | null
           email?: string
@@ -182,8 +279,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           last_name?: string | null
-          role_id?: string
-          status?: string
+          status?: Database["core"]["Enums"]["user_status"]
           updated_at?: string | null
         }
         Relationships: [
@@ -192,13 +288,6 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "profiles_role_id_fkey"
-            columns: ["role_id"]
-            isOneToOne: false
-            referencedRelation: "roles"
             referencedColumns: ["id"]
           },
         ]
@@ -235,30 +324,176 @@ export type Database = {
       }
       roles: {
         Row: {
-          description: string
+          company_id: string | null
+          created_at: string
+          description: string | null
           id: string
+          is_system_role: boolean | null
+          name: string
+          updated_at: string | null
         }
         Insert: {
-          description: string
-          id: string
+          company_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_system_role?: boolean | null
+          name: string
+          updated_at?: string | null
         }
         Update: {
-          description?: string
+          company_id?: string | null
+          created_at?: string
+          description?: string | null
           id?: string
+          is_system_role?: boolean | null
+          name?: string
+          updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "roles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          company_id: string | null
+          id: string
+          role_id: string | null
+          user_id: string
+        }
+        Insert: {
+          company_id?: string | null
+          id?: string
+          role_id?: string | null
+          user_id: string
+        }
+        Update: {
+          company_id?: string | null
+          id?: string
+          role_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_company_fk"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_roles_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
-      [_ in never]: never
+      v_my_profile: {
+        Row: {
+          avatar_url: string | null
+          company_id: string | null
+          company_name: string | null
+          created_at: string | null
+          email: string | null
+          first_name: string | null
+          full_name: string | null
+          id: string | null
+          is_owner: boolean | null
+          is_root: boolean | null
+          last_name: string | null
+          permissions: string[] | null
+          roles: Json | null
+          status: Database["core"]["Enums"]["user_status"] | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_user_profiles: {
+        Row: {
+          avatar_url: string | null
+          company_id: string | null
+          company_name: string | null
+          created_at: string | null
+          email: string | null
+          first_name: string | null
+          full_name: string | null
+          id: string | null
+          is_owner: boolean | null
+          is_root: boolean | null
+          last_name: string | null
+          permissions: string[] | null
+          roles: Json | null
+          status: Database["core"]["Enums"]["user_status"] | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       current_company_id: { Args: never; Returns: string }
       current_role: { Args: never; Returns: string }
+      get_id_root_role: { Args: never; Returns: string }
+      get_my_permissions: {
+        Args: never
+        Returns: Database["core"]["Enums"]["permission_key"][]
+      }
+      get_permissions_by_user: {
+        Args: { p_user_id: string }
+        Returns: {
+          key: string
+        }[]
+      }
+      get_role_ids_by_names: {
+        Args: { role_names: string[] }
+        Returns: string[]
+      }
+      get_roleid_by_name: { Args: { role_name: string }; Returns: string }
+      has_any_role: {
+        Args: { roles: string[]; target_company: string }
+        Returns: boolean
+      }
+      has_role: {
+        Args: { required_role: string; target_company: string }
+        Returns: boolean
+      }
+      is_root: { Args: never; Returns: boolean }
+      same_company: { Args: { target_company: string }; Returns: boolean }
       user_branches: { Args: never; Returns: string[] }
     }
     Enums: {
-      [_ in never]: never
+      permission_key:
+        | "user_view"
+        | "user_create"
+        | "user_delete"
+        | "admin_access"
+        | "billing_manage"
+      user_status: "active" | "inactive" | "deleted"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -471,7 +706,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      user_role: "root" | "admin" | "user"
+      user_status: "active" | "deactive"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -598,7 +834,16 @@ export type CompositeTypes<
 
 export const Constants = {
   core: {
-    Enums: {},
+    Enums: {
+      permission_key: [
+        "user_view",
+        "user_create",
+        "user_delete",
+        "admin_access",
+        "billing_manage",
+      ],
+      user_status: ["active", "inactive", "deleted"],
+    },
   },
   events: {
     Enums: {},
@@ -607,6 +852,9 @@ export const Constants = {
     Enums: {},
   },
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["root", "admin", "user"],
+      user_status: ["active", "deactive"],
+    },
   },
 } as const

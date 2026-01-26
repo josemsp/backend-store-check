@@ -1,12 +1,19 @@
-import { createSecurePlugin } from '../../app/routing/secure-router';
+import { authMiddleware } from '../../app/middlewares/auth.middleware';
+import { WorkerModule } from '../../app/routing/worker.module.registry';
 import {
     ListUsersController,
-    CreateUserController,
     GetUserController,
+    GetMeController,
 } from './users.controller';
 
-export const usersPlugin = createSecurePlugin('users', '/api/v1', [
-    { method: 'get', path: 'users', controller: ListUsersController },
-    { method: 'get', path: 'users/:id', controller: GetUserController },
-    { method: 'post', path: 'users', controller: CreateUserController },
-]);
+export const usersPlugin: WorkerModule = {
+    name: 'users',
+    basePath: '/api/v1/users',
+    middleware: [authMiddleware],
+    routes: [
+        { method: 'get', path: '/me', handler: GetMeController },
+        { method: 'get', path: '/', handler: ListUsersController },
+        { method: 'get', path: '/:id', handler: GetUserController }
+        // { method: 'post', path: '/', controller: CreateUserController },
+    ]
+};

@@ -1,16 +1,22 @@
-import { SupabaseClient, User } from "@supabase/supabase-js";
+import { SupabaseClient } from "@supabase/supabase-js";
 import { Database } from "./types";
+import { AuthContext } from "../types";
+import { UserAPI } from "../../modules/users/users.types";
 
 export interface Bindings {
+    ENV: "dev" | "prod";
     SUPABASE_URL: string;
+    FRONTEND_URL: string;
+    // Secrets
     SUPABASE_ANON_KEY: string;
     SUPABASE_SERVICE_ROLE_KEY: string;
+    RESEND_API_KEY: string;
 }
 
 export interface Variables {
-    user?: User;
-    profile?: Partial<Database['core']['Tables']['profiles']['Row']>;
-    supabase: SupabaseClient;
+    authContext?: AuthContext;
+    profile?: UserAPI;
+    supabase: SupabaseClient<Database>;
 }
 
 export type AppContext = {

@@ -165,3 +165,5 @@ dist
 .env*
 !.env.example
 .wrangler/
+.cloudflare/
+worker-configuration.d.ts

@@ -5,10 +5,12 @@
 		"target": "es2024",
 		/* Specify a set of bundled library declaration files that describe the target runtime environment. */
 		"lib": [
-			"es2024"
+			"es2024",
+			"WebWorker"
 		],
 		/* Specify what JSX code is generated. */
 		"jsx": "react-jsx",
+		"jsxImportSource": "react",
 		/* Specify what module code is generated. */
 		"module": "es2022",
 		/* Specify how TypeScript looks up a file from a given module specifier. */
@@ -31,15 +33,12 @@
 		"strict": true,
 		/* Skip type checking all .d.ts files. */
 		"skipLibCheck": true,
-		"types": [
-			"./worker-configuration.d.ts"
-		]
 	},
 	"exclude": [
 		"test"
 	],
 	"include": [
-		"worker-configuration.d.ts",
-		"src/**/*.ts"
+		"src/**/*.ts",
+		"src/**/*.tsx"
 	]
 }
