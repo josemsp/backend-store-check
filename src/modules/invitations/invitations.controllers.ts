@@ -20,6 +20,7 @@ export class InviteUserOwnerController extends BaseController {
     schema = {
         tags: ['Invitations'],
         summary: 'Invite a new user owner',
+        operationId: 'inviteUserOwner',
         security: [{ BearerAuth: [] }],
         request: {
             body: this.createBodySchema(InvitationsOwnerAPISchema)
@@ -77,6 +78,7 @@ export class ValidateInvitationController extends BaseController {
     schema = {
         tags: ['Invitations'],
         summary: 'Validate an invitation',
+        operationId: 'validateInvitation',
         request: {
             body: this.createBodySchema(ValidateInvitationAPISchema)
         },
@@ -121,6 +123,7 @@ export class AcceptInvitationController extends BaseController {
     schema = {
         tags: ['Invitations'],
         summary: 'Accept an invitation',
+        operationId: 'acceptInvitation',
         security: [{ BearerAuth: [] }],
 
         request: {
