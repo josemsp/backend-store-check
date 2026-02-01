@@ -61,6 +61,6 @@ export function serverError(c: Context<AppContext>, error?: any): Response {
         'INTERNAL_ERROR',
         'An internal error occurred',
         500,
-        c.env?.ENVIRONMENT === 'dev' ? error : undefined
+        c.env?.ENV === 'dev' ? error : undefined
     );
 }

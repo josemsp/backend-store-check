@@ -12,7 +12,7 @@ export const usersPlugin: WorkerModule = {
     middleware: [authMiddleware],
     routes: [
         { method: 'get', path: '/me', handler: GetMeController },
-        { method: 'get', path: '/', handler: ListUsersController },
+        // { method: 'get', path: '/', handler: ListUsersController },
         { method: 'get', path: '/:id', handler: GetUserController }
         // { method: 'post', path: '/', controller: CreateUserController },
     ]

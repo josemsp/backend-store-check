@@ -19,32 +19,36 @@ export const UserDBSchema = z.object({
         description: z.string(),
         is_system_role: z.boolean(),
     })),
-    created_at: z.iso.datetime(),
-    updated_at: z.iso.datetime(),
+    created_at: z.iso.datetime({ offset: true }),
+    updated_at: z.iso.datetime({ offset: true }),
 });
 
-export const UserAPISchema = UserDBSchema.transform(data => ({
-    id: data.id,
-    email: data.email,
-    firstName: data.first_name,
-    lastName: data.last_name,
-    fullName: data.full_name,
-    avatarUrl: data.avatar_url,
-    status: data.status,
-    companyId: data.company_id,
-    companyName: data.company_name,
-    isRoot: data.is_root,
-    isOwner: data.is_owner,
-    permissions: data.permissions,
-    roles: data.roles.map(r => ({
-        id: r.id,
-        name: r.name,
-        description: r.description,
-        isSystemRole: r.is_system_role,
+export const UserAPISchema = z.object({
+    id: UserDBSchema.shape.id,
+    email: UserDBSchema.shape.email,
+    firstName: UserDBSchema.shape.first_name,
+    lastName: UserDBSchema.shape.last_name,
+    fullName: UserDBSchema.shape.full_name,
+    avatarUrl: UserDBSchema.shape.avatar_url,
+    status: UserDBSchema.shape.status,
+    companyId: UserDBSchema.shape.company_id,
+    companyName: UserDBSchema.shape.company_name,
+    isRoot: UserDBSchema.shape.is_root,
+    isOwner: UserDBSchema.shape.is_owner,
+    permissions: UserDBSchema.shape.permissions,
+    roles: z.array(z.object({
+        id: z.uuid(),
+        name: z.string(),
+        description: z.string(),
+        isSystemRole: z.boolean(),
     })),
-    createdAt: data.created_at,
-    updatedAt: data.updated_at,
-}));
+    createdAt: UserDBSchema.shape.created_at,
+    updatedAt: UserDBSchema.shape.updated_at,
+});
+
+export const GetUserSchema = z.object({
+    id: z.uuid(),
+});
 
 export const CreateUserAPISchema = z.object({
     email: z.email(),

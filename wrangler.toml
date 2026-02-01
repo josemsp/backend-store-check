@@ -1,5 +1,6 @@
 main = "src/index.ts"
 compatibility_date = "2025-12-21"
+compatibility_flags = ["nodejs_compat"]
 
 [observability]
 enabled = true
@@ -8,6 +9,7 @@ enabled = true
 [vars]
 SUPABASE_URL = "https://ckcozmrongodmgxcnxap.supabase.co"
 FRONTEND_URL = "http://localhost:5173"
+ENV = "dev"
 
 [env.dev]
 name = "backend-store-check-dev"
@@ -15,6 +17,7 @@ name = "backend-store-check-dev"
 [env.dev.vars]
 SUPABASE_URL = "https://ckcozmrongodmgxcnxap.supabase.co"
 FRONTEND_URL = "http://localhost:5173"
+ENV = "dev"
 
 [env.prod]
 name = "backend-store-check-prod"
@@ -22,3 +25,4 @@ name = "backend-store-check-prod"
 [env.prod.vars]
 SUPABASE_URL = "https://ckcozmrongodmgxcnxap.supabase.co"
 FRONTEND_URL = "https://store-check.com"
+ENV = "prod"

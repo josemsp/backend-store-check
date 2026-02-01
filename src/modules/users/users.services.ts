@@ -1,7 +1,7 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { Database } from "../../shared/supabase/types";
-import { UserAPISchema } from "./users.schemas";
-import { ListProfilesParams, UpdateUserFromZod } from "./users.types";
+import { ListProfilesParams, UpdateUserFromZod, UserDB } from "./users.types";
+import { mapUserDbToApi } from "./users.transforms";
 
 export class UsersService {
     constructor(private db: SupabaseClient<Database>) { }
@@ -16,7 +16,7 @@ export class UsersService {
         if (error) throw new Error(error.message);
 
         try {
-            return UserAPISchema.parse(profile);
+            return mapUserDbToApi(profile as UserDB);
         } catch (error) {
             console.error('Profile validation error:', error);
             throw new Error('Invalid profile data from database');

@@ -1,21 +1,17 @@
-import { contentJson, OpenAPIRoute } from "chanfana";
 import { UsersService } from "./users.services";
-import z from "zod";
 import { Context } from "hono";
 import { createAnonClient } from "../../infra/supabase/anon.client";
 import { BaseController } from "../../shared/utils/base.controller";
 import { serverError, successResponse } from "../../shared/utils/response";
-import { CreateUserAPISchema, UserAPISchema } from "./users.schemas";
+import { GetUserSchema, ListProfilesSchema, UserAPISchema } from "./users.schemas";
 import { AppContext } from "../../shared/supabase/general";
 
 export class GetMeController extends BaseController {
     schema = {
         tags: ['Users'],
         summary: 'Get a user',
+        operationId: 'getMe',
         security: [{ bearerAuth: [] }],
-        request: {
-            body: this.createBodySchema(CreateUserAPISchema)
-        },
         responses: this.createStandardResponses(
             UserAPISchema,
             {
@@ -38,22 +34,22 @@ export class GetMeController extends BaseController {
     }
 }
 
-export class GetUserController extends OpenAPIRoute {
+export class GetUserController extends BaseController {
     schema = {
         tags: ['Users'],
         summary: 'Get a user',
-        responses: {
-            '200': {
-                description: 'User success',
-                ...contentJson(UserAPISchema),
-            },
-            '404': {
-                description: 'User not found',
-                ...contentJson({
-                    error: z.string(),
-                }),
-            },
+        operationId: 'getUser',
+        request: {
+            params: GetUserSchema
         },
+        responses: this.createStandardResponses(
+            UserAPISchema,
+            {
+                successDescription: 'User profile retrieved successfully',
+                includeAuth: true,
+                include404: true
+            }
+        )
     }
 
     async handle(c: Context<AppContext>) {
@@ -77,7 +73,11 @@ export class ListUsersController extends BaseController {
     schema = {
         tags: ['Users'],
         summary: 'Get all users',
+        operationId: 'listUsers',
         security: [{ bearerAuth: [] }],
+        request: {
+            params: ListProfilesSchema
+        },
         responses: this.createStandardResponses(UserAPISchema, {
             successDescription: "Users retrieved",
             include400: true,

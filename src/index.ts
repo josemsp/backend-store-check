@@ -22,7 +22,7 @@ const app = createWorkerApp([
 	invitationsPluginPublic,
 	// private routes
 	invitationsPluginPrivate,
-	// usersPlugin
+	usersPlugin
 ]);
 
 export default app;

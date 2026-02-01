@@ -3,9 +3,8 @@
 	"version": "0.0.0",
 	"private": true,
 	"scripts": {
-		"deploy": "wrangler deploy",
-		"dev": "wrangler dev",
-		"start": "wrangler dev",
+		"dev": "wrangler dev --env dev",
+		"start": "wrangler dev --env dev",
 		"test": "vitest",
 		"cf-typegen": "wrangler types",
 		"supabase:types": "npx --yes supabase@latest gen types typescript --project-id ckcozmrongodmgxcnxap --schema public,core,inventory,events > src/shared/supabase/types.ts"
