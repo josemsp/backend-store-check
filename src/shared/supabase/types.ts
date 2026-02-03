@@ -171,11 +171,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "invitations_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "v_my_profile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invitations_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "v_user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "invitations_role_id_fkey"
             columns: ["role_id"]
             isOneToOne: false
             referencedRelation: "roles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invitations_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_profile"
+            referencedColumns: ["role_id"]
+          },
+          {
+            foreignKeyName: "invitations_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_profiles"
+            referencedColumns: ["role_id"]
           },
         ]
       }
@@ -208,17 +236,14 @@ export type Database = {
       }
       permissions: {
         Row: {
-          description: string | null
           id: string
           key: Database["core"]["Enums"]["permission_key"]
         }
         Insert: {
-          description?: string | null
           id?: string
           key: Database["core"]["Enums"]["permission_key"]
         }
         Update: {
-          description?: string | null
           id?: string
           key?: Database["core"]["Enums"]["permission_key"]
         }
@@ -240,7 +265,22 @@ export type Database = {
           id?: string
           role?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "platform_users_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "v_my_profile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "platform_users_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "v_user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -290,6 +330,20 @@ export type Database = {
             referencedRelation: "companies"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "v_my_profile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "v_user_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       role_permissions: {
@@ -307,18 +361,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "role_permissions_permission_id_fkey"
-            columns: ["permission_id"]
+            foreignKeyName: "role_permissions_role_id_fkey"
+            columns: ["role_id"]
             isOneToOne: false
-            referencedRelation: "permissions"
+            referencedRelation: "roles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "role_permissions_role_id_fkey"
             columns: ["role_id"]
             isOneToOne: false
-            referencedRelation: "roles"
-            referencedColumns: ["id"]
+            referencedRelation: "v_my_profile"
+            referencedColumns: ["role_id"]
+          },
+          {
+            foreignKeyName: "role_permissions_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_profiles"
+            referencedColumns: ["role_id"]
           },
         ]
       }
@@ -360,6 +421,36 @@ export type Database = {
           },
         ]
       }
+      user_permissions: {
+        Row: {
+          permission: Database["core"]["Enums"]["permission_key"]
+          user_id: string
+        }
+        Insert: {
+          permission: Database["core"]["Enums"]["permission_key"]
+          user_id: string
+        }
+        Update: {
+          permission?: Database["core"]["Enums"]["permission_key"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_permissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_profile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_permissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           company_id: string | null
@@ -394,6 +485,20 @@ export type Database = {
             referencedRelation: "roles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "user_roles_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_profile"
+            referencedColumns: ["role_id"]
+          },
+          {
+            foreignKeyName: "user_roles_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_profiles"
+            referencedColumns: ["role_id"]
+          },
         ]
       }
     }
@@ -412,7 +517,8 @@ export type Database = {
           is_root: boolean | null
           last_name: string | null
           permissions: string[] | null
-          roles: Json | null
+          role_id: string | null
+          role_name: string | null
           status: Database["core"]["Enums"]["user_status"] | null
           updated_at: string | null
         }
@@ -440,7 +546,8 @@ export type Database = {
           is_root: boolean | null
           last_name: string | null
           permissions: string[] | null
-          roles: Json | null
+          role_id: string | null
+          role_name: string | null
           status: Database["core"]["Enums"]["user_status"] | null
           updated_at: string | null
         }
@@ -459,10 +566,6 @@ export type Database = {
       current_company_id: { Args: never; Returns: string }
       current_role: { Args: never; Returns: string }
       get_id_root_role: { Args: never; Returns: string }
-      get_my_permissions: {
-        Args: never
-        Returns: Database["core"]["Enums"]["permission_key"][]
-      }
       get_permissions_by_user: {
         Args: { p_user_id: string }
         Returns: {
@@ -488,11 +591,25 @@ export type Database = {
     }
     Enums: {
       permission_key:
-        | "user_view"
-        | "user_create"
-        | "user_delete"
-        | "admin_access"
-        | "billing_manage"
+        | "users.read"
+        | "users.invite"
+        | "users.update"
+        | "users.remove"
+        | "roles.assign"
+        | "company.create"
+        | "company.read"
+        | "company.update"
+        | "company.delete"
+        | "branches.create"
+        | "branches.read"
+        | "branches.update"
+        | "branches.delete"
+        | "shipments.create"
+        | "shipments.read"
+        | "shipments.update"
+        | "purchases.create"
+        | "purchases.read"
+        | "purchases.update"
       user_status: "active" | "inactive" | "deleted"
     }
     CompositeTypes: {
@@ -836,11 +953,25 @@ export const Constants = {
   core: {
     Enums: {
       permission_key: [
-        "user_view",
-        "user_create",
-        "user_delete",
-        "admin_access",
-        "billing_manage",
+        "users.read",
+        "users.invite",
+        "users.update",
+        "users.remove",
+        "roles.assign",
+        "company.create",
+        "company.read",
+        "company.update",
+        "company.delete",
+        "branches.create",
+        "branches.read",
+        "branches.update",
+        "branches.delete",
+        "shipments.create",
+        "shipments.read",
+        "shipments.update",
+        "purchases.create",
+        "purchases.read",
+        "purchases.update",
       ],
       user_status: ["active", "inactive", "deleted"],
     },
