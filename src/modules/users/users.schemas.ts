@@ -55,6 +55,8 @@ export const UserAPISchema = z.object({
 	updatedAt: UserDBSchema.shape.updated_at,
 });
 
+export const UserListAPISchema = z.array(UserAPISchema);
+
 export const GetUserSchema = z.object({
 	id: UserDBSchema.shape.id,
 });

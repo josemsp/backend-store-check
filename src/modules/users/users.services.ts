@@ -116,9 +116,17 @@ export class UsersService {
 	async update(id: string, payload: UpdateUserFromZod) {
 		const { role_id, ...profileData } = payload;
 
-		const { error } = await this.db.schema('core').from('profiles').update(profileData).eq('id', id).neq('status', 'deleted');
+		if (role_id) {
+			const { error: roleError } = await this.db.schema('core').from('user_roles').update({ role_id }).eq('user_id', id).select();
 
-		if (error) throw new Error(error.message);
+			if (roleError) throw new Error(roleError.message);
+		}
+
+		if (Object.keys(profileData).length > 0) {
+			const { error } = await this.db.schema('core').from('profiles').update(profileData).eq('id', id).select();
+
+			if (error) throw new Error(error.message);
+		}
 	}
 
 	async delete(id: string) {

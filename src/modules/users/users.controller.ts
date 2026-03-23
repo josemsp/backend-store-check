@@ -1,9 +1,17 @@
 import { UsersService } from './users.services';
 import { Context } from 'hono';
+import { mapUserDbToApi } from './users.transforms';
 import { createAnonClient } from '../../infra/supabase/anon.client';
 import { BaseController } from '../../shared/utils/base.controller';
 import { serverError, successResponse } from '../../shared/utils/response';
-import { GetUserSchema, ListProfilesSchema, UpdateUserAPIParamsSchema, UpdateUserAPISchema, UserAPISchema } from './users.schemas';
+import {
+	GetUserSchema,
+	ListProfilesSchema,
+	UpdateUserAPIParamsSchema,
+	UpdateUserAPISchema,
+	UserAPISchema,
+	UserListAPISchema,
+} from './users.schemas';
 import { AppContext } from '../../shared/supabase/general';
 import { AssignPermissionAPISchema } from '../permissions/permission.schemas';
 import { PermissionService } from '../permissions/permission.services';
@@ -49,13 +57,10 @@ export class GetUserController extends BaseController {
 	};
 
 	async handle(c: Context<AppContext>) {
+		const authHeader = c.req.header('Authorization');
 		const service = new UsersService(
 			createAnonClient(c.env, {
-				global: {
-					headers: {
-						Authorization: c.req.header('Authorization')!,
-					},
-				},
+				accessToken: async () => authHeader?.replace('Bearer ', '') || '',
 			}),
 		);
 		const profile = await service.getOne(c.req.param('id'));
@@ -63,7 +68,9 @@ export class GetUserController extends BaseController {
 		if (!profile) {
 			return c.json({ error: 'User not found' }, 404);
 		}
-		return c.json(profile, 200);
+
+		const mappedProfile = mapUserDbToApi(profile as any);
+		return successResponse(c, mappedProfile);
 	}
 }
 
@@ -76,7 +83,7 @@ export class ListUsersController extends BaseController {
 		request: {
 			params: ListProfilesSchema,
 		},
-		responses: this.createStandardResponses(UserAPISchema, {
+		responses: this.createStandardResponses(UserListAPISchema, {
 			successDescription: 'Users retrieved',
 			include400: true,
 			includeAuth: true,
@@ -85,17 +92,15 @@ export class ListUsersController extends BaseController {
 	};
 
 	async handle(c: Context<AppContext>) {
+		const authHeader = c.req.header('Authorization');
 		const service = new UsersService(
 			createAnonClient(c.env, {
-				global: {
-					headers: {
-						Authorization: c.req.header('Authorization')!,
-					},
-				},
+				accessToken: async () => authHeader?.replace('Bearer ', '') || '',
 			}),
 		);
 		const profiles = await service.getAll();
-		return c.json(profiles, 200);
+		const mappedProfiles = profiles.map((p: any) => mapUserDbToApi(p));
+		return successResponse(c, mappedProfiles);
 	}
 }
 
@@ -108,7 +113,7 @@ export class UpdateUserController extends BaseController {
 			params: UpdateUserAPIParamsSchema,
 			body: this.createBodySchema(UpdateUserAPISchema),
 		},
-		responses: this.createStandardResponses(UpdateUserAPISchema, {
+		responses: this.createStandardResponses(UserAPISchema, {
 			successDescription: 'User updated',
 			include400: true,
 			includeAuth: true,
@@ -117,16 +122,40 @@ export class UpdateUserController extends BaseController {
 	};
 
 	async handle(c: Context<AppContext>) {
-		const service = new UsersService(
-			createAnonClient(c.env, {
-				global: {
-					headers: {
-						Authorization: c.req.header('Authorization')!,
-					},
+		const authHeader = c.req.header('Authorization');
+
+		if (!authHeader || !authHeader.startsWith('Bearer ')) {
+			return c.json({ error: 'Unauthorized' }, 401);
+		}
+
+		const supabaseAuth = createAnonClient(c.env);
+		const supabaseDb = createAnonClient(c.env, {
+			db: {
+				schema: 'core',
+			},
+			global: {
+				headers: {
+					Authorization: authHeader,
 				},
-			}),
-		);
+			},
+		});
+		const service = new UsersService(supabaseDb);
+
+		// validate authenticated user
+		const {
+			data: { user },
+			error: authError,
+		} = await supabaseAuth.auth.getUser(authHeader.replace('Bearer ', ''));
+
+		if (authError || !user) {
+			return c.json({ error: 'Invalid token' }, 401);
+		}
+
 		const data = await this.getValidatedData<typeof this.schema>();
+		// only allow update if user is owner or admin
+		if (user.id !== data.params.id) {
+			return c.json({ error: 'Forbidden' }, 403);
+		}
 
 		// Transformar de camelCase a snake_case
 		const updatePayload: any = {};
@@ -147,7 +176,8 @@ export class UpdateUserController extends BaseController {
 				return c.json({ error: 'User not found' }, 404);
 			}
 
-			return successResponse(c, updatedUser, 'User updated');
+			const mappedUpdatedUser = mapUserDbToApi(updatedUser as any);
+			return successResponse(c, mappedUpdatedUser, 'User updated');
 		} catch (error) {
 			console.error('UpdateUser error:', error);
 			return serverError(c, error);
@@ -174,22 +204,15 @@ export class AssignUserPermissionsController extends BaseController {
 	};
 
 	async handle(c: Context<AppContext>) {
+		const authHeader = c.req.header('Authorization');
 		const service = new UsersService(
 			createAnonClient(c.env, {
-				global: {
-					headers: {
-						Authorization: c.req.header('Authorization')!,
-					},
-				},
+				accessToken: async () => authHeader?.replace('Bearer ', '') || '',
 			}),
 		);
 		const servicePermission = new PermissionService(
 			createAnonClient(c.env, {
-				global: {
-					headers: {
-						Authorization: c.req.header('Authorization')!,
-					},
-				},
+				accessToken: async () => authHeader?.replace('Bearer ', '') || '',
 			}),
 		);
 		const data = await this.getValidatedData<typeof this.schema>();
@@ -199,7 +222,8 @@ export class AssignUserPermissionsController extends BaseController {
 		});
 		const profile = await service.getOne(data.params.id);
 
-		return successResponse(c, profile, 'User permissions assigned');
+		const mappedProfile = mapUserDbToApi(profile as any);
+		return successResponse(c, mappedProfile, 'User permissions assigned');
 	}
 }
 

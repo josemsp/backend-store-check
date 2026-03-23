@@ -19,11 +19,11 @@
 	},
 	"dependencies": {
 		"@react-email/render": "^2.0.2",
-		"@supabase/supabase-js": "^2.89.0",
-		"chanfana": "^3.0.0",
-		"hono": "^4.11.1",
-		"resend": "^6.7.0",
-		"zod": "^4.3.5"
+		"@supabase/supabase-js": "2.99.3",
+		"chanfana": "3.0.0",
+		"hono": "4.12.8",
+		"resend": "6.7.0",
+		"zod": "4.3.5"
 	},
-	"packageManager": "pnpm@10.28.0"
+	"packageManager": "pnpm@10.32.1"
 }
