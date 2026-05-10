@@ -26,4 +26,16 @@ export const InviteUserRequestSchema = z.object({
 export const AcceptInvitationRequestSchema = z.object({
 	token: z.string(),
 	avatar_url: z.string().optional(),
+	// owners
+	business_name: z.string().optional(),
+	logo_url: z.string().optional(),
+});
+
+export const ValidateInvitationRequestSchema = z.object({
+	token: z.string(),
+});
+
+export const ValidateInvitationResponseSchema = z.object({
+	email: z.email(),
+	role: RoleEnum,
 });

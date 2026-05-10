@@ -1,7 +1,12 @@
 import { Context } from 'hono';
 import { BaseController } from '../../shared/utils/base.controller';
 import { serverError, successResponse, validationError } from '../../shared/utils/response';
-import { AcceptInvitationRequestSchema, InviteUserRequestSchema } from './invitations.schemas';
+import {
+	AcceptInvitationRequestSchema,
+	InviteUserRequestSchema,
+	ValidateInvitationRequestSchema,
+	ValidateInvitationResponseSchema,
+} from './invitations.schemas';
 import { AppContext } from '../../shared/supabase/general';
 import { extractBearerToken } from '../../shared/supabase/helpers';
 import { createAdminClient } from '../../infra/supabase/admin.client';
@@ -57,6 +62,41 @@ export class InviteUserController extends BaseController {
 	}
 }
 
+export class ValidateInvitationController extends BaseController {
+	schema = {
+		tags: ['Invitations'],
+		summary: 'Validate an invitation',
+		operationId: 'validateInvitation',
+		request: {
+			body: this.createBodySchema(ValidateInvitationRequestSchema),
+		},
+		responses: this.createStandardResponses(ValidateInvitationResponseSchema, {
+			successDescription: 'Invitation validated successfully',
+			include400: true,
+			includeAuth: true,
+			include404: true,
+		}),
+	};
+
+	async handle(c: Context<AppContext>) {
+		try {
+			const data = await this.getValidatedData<typeof this.schema>();
+			const { token } = data.body;
+			const supabase = createAdminClient(c.env);
+			const service = new InvitationsService(supabase, c);
+
+			const validationData = await service.validateInvitation(token);
+
+			return successResponse(c, validationData, 'Invitation validated successfully');
+		} catch (error) {
+			if (error instanceof ZodError) {
+				return validationError(c, error);
+			}
+			return serverError(c, error);
+		}
+	}
+}
+
 export class AcceptInvitationController extends BaseController {
 	schema = {
 		tags: ['Invitations'],
@@ -101,6 +141,9 @@ export class AcceptInvitationController extends BaseController {
 				branch_id: user.user_metadata?.branch_id ?? undefined,
 				phone: user.user_metadata?.phone ?? null,
 				avatar_url: payload.avatar_url ?? null,
+				// owner
+				business_name: payload.business_name,
+				logo_url: payload.logo_url,
 			});
 
 			return successResponse(c, result, 'Invitation accepted successfully');

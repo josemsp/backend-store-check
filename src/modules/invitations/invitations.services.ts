@@ -62,8 +62,29 @@ export class InvitationsService {
 		return response.data;
 	}
 
+	async validateInvitation(token: string) {
+		const { data, error } = await this.supabase
+			.from('invitations')
+			.select('email, role, status, expires_at')
+			.eq('token', token)
+			.maybeSingle();
+
+		if (error) throw new Error(error.message);
+
+		if (!data) throw new Error('Invitation not found');
+
+		if (data.status === 'accepted') throw new Error('Invitation already accepted');
+
+		if (data.expires_at && data.expires_at < new Date().toISOString()) throw new Error('Invitation expired');
+
+		return {
+			email: data.email,
+			role: data.role,
+		};
+	}
+
 	async acceptInvitation(payload: AcceptInvitationInput) {
-		const { user_id, email, owner_id, name, role, branch_id, avatar_url } = payload;
+		const { user_id, email, owner_id, name, role, branch_id, avatar_url, business_name, logo_url } = payload;
 
 		const { data: invitation, error: invitationError } = await this.supabase
 			.from('invitations')
@@ -95,6 +116,17 @@ export class InvitationsService {
 		if (profileError) throw new Error(profileError.message);
 
 		await this.supabase.from('invitations').update({ status: 'accepted' }).eq('id', invitation.id);
+
+		if (role === 'owner') {
+			const { error: ownerError } = await this.supabase.from('owners').insert({
+				name,
+				business_name: business_name ?? '',
+				email,
+				logo_url,
+			});
+
+			if (ownerError) throw new Error(ownerError.message);
+		}
 
 		return {
 			acceptedAt: new Date(),

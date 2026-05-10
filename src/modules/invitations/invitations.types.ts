@@ -25,4 +25,7 @@ export type AcceptInvitationInput = {
 	branch_id?: string | null;
 	phone?: string | null;
 	avatar_url?: string | null;
+	// owner
+	business_name?: string;
+	logo_url?: string;
 };
