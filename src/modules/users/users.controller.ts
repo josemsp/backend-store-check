@@ -2,7 +2,7 @@ import { OwnerUserService, RootUserService, UserService } from './users.services
 import { Context } from 'hono';
 import { BaseController } from '../../shared/utils/base.controller';
 import { serverError, successResponse } from '../../shared/utils/response';
-import { GetUserSchema, PaginationQuerySchema, UpdateUserSchema, UserListAPISchema, UserProfileViewSchema } from './users.schemas';
+import { GetUserSchema, PaginationQuerySchema, UpdateUserSchema, UserProfileViewSchema, UserResponseSchema } from './users.schemas';
 import { AppContext } from '../../shared/supabase/general';
 import { UserProfileAPI } from './users.types';
 
@@ -12,7 +12,7 @@ export class GetMeController extends BaseController {
 		summary: 'Get a user',
 		operationId: 'getMe',
 		security: [{ bearerAuth: [] }],
-		responses: this.createStandardResponses(UserProfileViewSchema, {
+		responses: this.createStandardResponses(UserResponseSchema, {
 			successDescription: 'User profile retrieved successfully',
 			includeAuth: true,
 			include404: true,
@@ -45,10 +45,11 @@ export class GetUserController extends BaseController {
 		tags: ['Users'],
 		summary: 'Get a user',
 		operationId: 'getUser',
+		security: [{ bearerAuth: [] }],
 		request: {
 			params: GetUserSchema,
 		},
-		responses: this.createStandardResponses(UserProfileViewSchema, {
+		responses: this.createStandardResponses(UserResponseSchema, {
 			successDescription: 'User profile retrieved successfully',
 			includeAuth: true,
 			include404: true,
@@ -130,7 +131,7 @@ export class UpdateUserController extends BaseController {
 			params: GetUserSchema,
 			body: this.createBodySchema(UpdateUserSchema),
 		},
-		responses: this.createStandardResponses(UserProfileViewSchema, {
+		responses: this.createStandardResponses(UserResponseSchema, {
 			successDescription: 'User updated successfully',
 			includeAuth: true,
 		}),
