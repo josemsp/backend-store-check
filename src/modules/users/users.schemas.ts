@@ -50,7 +50,7 @@ export const UserListResponseSchema = z.object({
 	}),
 });
 
-export const UpdateUserSchema = z.object({
+export const UpdateUserRequestSchema = z.object({
 	avatar_url: z.string().optional(),
 	branch_id: z.string().optional(),
 	email: z.email().optional(),

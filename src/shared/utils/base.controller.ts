@@ -55,6 +55,43 @@ export abstract class BaseController extends OpenAPIRoute {
 		return { ...responses, ...customResponses };
 	}
 
+	protected createNoContentResponse(options: Omit<ResponseOptions, 'successDescription'> = {}): OpenAPIRouteSchema['responses'] {
+		const { includeAuth = true, include404 = true, include400 = false, customResponses = {} } = options;
+
+		const responses: OpenAPIRouteSchema['responses'] = {
+			'204': {
+				description: 'Operation successful, no content returned',
+			},
+			'500': {
+				description: 'Internal server error',
+				...contentJson(ErrorResponseSchema),
+			},
+		};
+
+		if (include400) {
+			responses['400'] = {
+				description: 'Bad request / validation error',
+				...contentJson(ErrorResponseSchema),
+			};
+		}
+
+		if (includeAuth) {
+			responses['401'] = {
+				description: 'Unauthorized',
+				...contentJson(ErrorResponseSchema),
+			};
+		}
+
+		if (include404) {
+			responses['404'] = {
+				description: 'Not found',
+				...contentJson(ErrorResponseSchema),
+			};
+		}
+
+		return { ...responses, ...customResponses };
+	}
+
 	protected createBodySchema<T>(schema: z.ZodType<T>) {
 		return contentJson(schema);
 	}

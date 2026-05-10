@@ -1,29 +1,29 @@
-import z from "zod";
+import z from 'zod';
+import { RoleEnum } from '../users/users.schemas';
 
-export const InviteUserAPISchema = z.object({
-    email: z.string().email(),
-    ownerId: z.string().uuid(),
-    branchId: z.string().uuid().optional(),
-    name: z.string(),
-    phone: z.string().optional(),
-    role: z.enum(['owner', 'manager', 'warehouse', 'branch_staff']).default('branch_staff'),
+export const InvitationStatusEnum = z.enum(['pending', 'accepted', 'expired']);
+
+export const InvitationDBSchema = z.object({
+	id: z.uuid(),
+	owner_id: z.uuid(),
+	email: z.email(),
+	branch_id: z.uuid().nullable(),
+	role: RoleEnum,
+	status: InvitationStatusEnum,
+	expires_at: z.iso.datetime({ offset: true }).nullable(),
+	created_at: z.iso.datetime({ offset: true }).nullable(),
+	token: z.uuid(),
+	invited_by: z.uuid().nullable(),
+	is_system_invite: z.boolean(),
 });
 
-export const InviteUserDBSchema = InviteUserAPISchema.transform((data) => ({
-    email: data.email,
-    owner_id: data.ownerId,
-    branch_id: data.branchId || null,
-    name: data.name,
-    phone: data.phone || null,
-    role: data.role,
-}));
-
-export const AcceptInvitationAPISchema = z.object({
-    token: z.string(),
-    avatarUrl: z.string().optional(),
+export const InviteUserRequestSchema = z.object({
+	email: z.email(),
+	branch_id: z.uuid().optional(),
+	role: RoleEnum.default('branch_staff'),
 });
 
-export const AcceptInvitationAPISchemaResponse = z.object({
-    acceptedAt: z.date(),
-    invitationStatus: z.string(),
+export const AcceptInvitationRequestSchema = z.object({
+	token: z.string(),
+	avatar_url: z.string().optional(),
 });

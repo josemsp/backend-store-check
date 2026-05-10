@@ -79,8 +79,7 @@ export class CreateOwnerRelationshipController extends BaseController {
 		request: {
 			body: this.createBodySchema(CreateOwnerRelationshipAPISchema),
 		},
-		responses: this.createStandardResponses(OwnerRelationshipAPISchema, {
-			successDescription: 'Owner relationship created',
+		responses: this.createNoContentResponse({
 			include400: true,
 			includeAuth: true,
 		}),
@@ -90,8 +89,8 @@ export class CreateOwnerRelationshipController extends BaseController {
 		const data = await this.getValidatedData<typeof this.schema>();
 		const payload = CreateOwnerRelationshipDBSchema.parse(data.body);
 		const service = new OwnerRelationshipsService(c.get('supabase'));
-		const result = await service.create(payload);
-		return successResponse(c, mapOwnerRelationshipDbToApi(result), 'Owner relationship created');
+		await service.create(payload);
+		return c.body(null, 204);
 	}
 }
 
@@ -186,8 +185,7 @@ export class DeleteOwnerRelationshipController extends BaseController {
 		request: {
 			params: GetOwnerRelationshipSchema,
 		},
-		responses: this.createStandardResponses(null, {
-			successDescription: 'Owner relationship deleted',
+		responses: this.createNoContentResponse({
 			includeAuth: true,
 			include404: true,
 		}),
@@ -196,6 +194,6 @@ export class DeleteOwnerRelationshipController extends BaseController {
 	async handle(c: Context<AppContext>) {
 		const service = new OwnerRelationshipsService(c.get('supabase'));
 		await service.delete(c.req.param('id'));
-		return successResponse(c, null, 'Owner relationship deleted');
+		return c.body(null, 204);
 	}
 }

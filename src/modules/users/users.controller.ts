@@ -2,7 +2,7 @@ import { OwnerUserService, RootUserService, UserService } from './users.services
 import { Context } from 'hono';
 import { BaseController } from '../../shared/utils/base.controller';
 import { serverError, successResponse } from '../../shared/utils/response';
-import { GetUserSchema, PaginationQuerySchema, UpdateUserSchema, UserProfileViewSchema, UserResponseSchema } from './users.schemas';
+import { GetUserSchema, PaginationQuerySchema, UpdateUserRequestSchema, UserProfileViewSchema, UserResponseSchema } from './users.schemas';
 import { AppContext } from '../../shared/supabase/general';
 import { UserProfileAPI } from './users.types';
 
@@ -129,7 +129,7 @@ export class UpdateUserController extends BaseController {
 		security: [{ bearerAuth: [] }],
 		request: {
 			params: GetUserSchema,
-			body: this.createBodySchema(UpdateUserSchema),
+			body: this.createBodySchema(UpdateUserRequestSchema),
 		},
 		responses: this.createStandardResponses(UserResponseSchema, {
 			successDescription: 'User updated successfully',
