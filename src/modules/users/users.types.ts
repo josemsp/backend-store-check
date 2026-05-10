@@ -1,40 +1,20 @@
-import z from "zod";
-import {
-    ListProfilesSchema,
-    ListUserProfilesQuerySchema,
-    PaginatedUserProfilesSchema,
-    UpdateUserDBSchema,
-    UserDBSchema,
-    CreateUserAPISchema,
-    UserAPISchema,
-    CreateUserDBSchema,
-} from "./users.schemas";
-import { Database } from "../../shared/supabase/types";
+import z from 'zod';
+import { PaginationQuerySchema, UserDBSchema, UserProfileViewSchema } from './users.schemas';
+import { Database } from '../../shared/supabase';
 
+// Database types
+export type UserDB = Database['public']['Tables']['user_profiles']['Row'];
+export type UserRoleDB = UserDB['role'];
 
-export type UserAPI = z.infer<typeof UserAPISchema>;
-export type UserDB = z.input<typeof UserDBSchema>;
+// View types
+export type CurrentUserProfileDB = Database['public']['Views']['v_current_user']['Row'];
+export type UserProfileRootDB = Database['public']['Views']['v_users_full']['Row'];
+export type UserProfileOwnerDB = Database['public']['Views']['v_company_users']['Row'];
 
-export type CreateUserInput = z.input<typeof CreateUserAPISchema>;
-export type CreateUserDB = z.output<typeof CreateUserDBSchema>;
+export type UserProfileAPI = z.infer<typeof UserProfileViewSchema>;
+export type UserAPI = z.infer<typeof UserDBSchema>;
 
-
-export type UserTypeZod = z.infer<typeof UserDBSchema>;
-
-export type CreateUserFromZod = Omit<UserTypeZod, 'id' | 'created_at' | 'updated_at'>;
-
-export type CreateUser = z.infer<typeof CreateUserAPISchema>
-
-export type UserProfileData = Database['core']['Views']['v_user_profiles']['Row'];
+export type PaginationParams = z.infer<typeof PaginationQuerySchema>;
 
 // Compare UserProfileData with UserFromZod.
-const itShouldBeOk = UserDBSchema as z.ZodType<UserProfileData>;
-
-export type UpdateUserFromZod = z.infer<typeof UpdateUserDBSchema>;
-
-export type ListProfilesParams = z.infer<typeof ListProfilesSchema>;
-
-export type ListUserProfilesQuery = z.infer<typeof ListUserProfilesQuerySchema>;
-
-export type PaginatedUserProfiles = z.infer<typeof PaginatedUserProfilesSchema>;
-
+const itShouldBeOk = UserProfileViewSchema as z.ZodType<CurrentUserProfileDB>;

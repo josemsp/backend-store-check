@@ -1,6 +1,6 @@
 import { OpenAPIRoute, OpenAPIRouteSchema, contentJson } from 'chanfana';
 import { z } from 'zod';
-import { createSuccessResponseSchema, ErrorResponseSchema } from './response-schemas';
+import { ErrorResponseSchema } from './response-schemas';
 
 export interface ResponseOptions {
 	successDescription?: string;
@@ -11,8 +11,7 @@ export interface ResponseOptions {
 }
 
 export abstract class BaseController extends OpenAPIRoute {
-	/* -------------------- RESPONSES -------------------- */
-	protected createStandardResponses<T extends z.ZodTypeAny>(dataSchema: T, options: ResponseOptions = {}): OpenAPIRouteSchema['responses'] {
+	protected createStandardResponses(dataSchema: z.ZodTypeAny, options: ResponseOptions = {}): OpenAPIRouteSchema['responses'] {
 		const {
 			successDescription = 'Operation successful',
 			includeAuth = true,
@@ -24,7 +23,7 @@ export abstract class BaseController extends OpenAPIRoute {
 		const responses: OpenAPIRouteSchema['responses'] = {
 			'200': {
 				description: successDescription,
-				...contentJson(createSuccessResponseSchema(dataSchema)),
+				...contentJson(dataSchema),
 			},
 			'500': {
 				description: 'Internal server error',

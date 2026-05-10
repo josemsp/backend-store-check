@@ -10,821 +10,1680 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgrestVersion: "14.5"
   }
-  core: {
+  public: {
     Tables: {
-      branch_users: {
+      branches: {
         Row: {
-          branch_id: string
-          user_id: string
+          address: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          latitude: number | null
+          longitude: number | null
+          name: string
+          owner_id: string
+          phone: string | null
+          type: Database["public"]["Enums"]["branch_type"]
+          updated_at: string
         }
         Insert: {
-          branch_id: string
-          user_id: string
+          address?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          owner_id: string
+          phone?: string | null
+          type: Database["public"]["Enums"]["branch_type"]
+          updated_at?: string
         }
         Update: {
-          branch_id?: string
-          user_id?: string
+          address?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          owner_id?: string
+          phone?: string | null
+          type?: Database["public"]["Enums"]["branch_type"]
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "branch_users_branch_id_fkey"
+            foreignKeyName: "branches_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "owners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      healthcheck: {
+        Row: {
+          id: number
+        }
+        Insert: {
+          id: number
+        }
+        Update: {
+          id?: number
+        }
+        Relationships: []
+      }
+      inventory: {
+        Row: {
+          branch_id: string
+          id: string
+          owner_id: string
+          product_id: string
+          quantity: number
+          updated_at: string
+        }
+        Insert: {
+          branch_id: string
+          id?: string
+          owner_id: string
+          product_id: string
+          quantity?: number
+          updated_at?: string
+        }
+        Update: {
+          branch_id?: string
+          id?: string
+          owner_id?: string
+          product_id?: string
+          quantity?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_branch_id_fkey"
             columns: ["branch_id"]
             isOneToOne: false
             referencedRelation: "branches"
             referencedColumns: ["id"]
           },
-        ]
-      }
-      branches: {
-        Row: {
-          address: string | null
-          company_id: string
-          created_at: string | null
-          id: string
-          name: string
-          timezone: string | null
-        }
-        Insert: {
-          address?: string | null
-          company_id: string
-          created_at?: string | null
-          id?: string
-          name: string
-          timezone?: string | null
-        }
-        Update: {
-          address?: string | null
-          company_id?: string
-          created_at?: string | null
-          id?: string
-          name?: string
-          timezone?: string | null
-        }
-        Relationships: [
           {
-            foreignKeyName: "branches_company_id_fkey"
-            columns: ["company_id"]
+            foreignKeyName: "inventory_branch_id_fkey"
+            columns: ["branch_id"]
             isOneToOne: false
-            referencedRelation: "companies"
+            referencedRelation: "v_company_users"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "inventory_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_current_user"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "inventory_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_users_full"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "inventory_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "vw_branch_inventory_summary"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "inventory_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "owners"
             referencedColumns: ["id"]
           },
-        ]
-      }
-      companies: {
-        Row: {
-          created_at: string | null
-          id: string
-          legal_name: string | null
-          name: string
-          tax_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          legal_name?: string | null
-          name: string
-          tax_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          legal_name?: string | null
-          name?: string
-          tax_id?: string | null
-        }
-        Relationships: []
-      }
-      company_settings: {
-        Row: {
-          company_id: string
-          created_at: string | null
-          currency: string | null
-          low_stock_alerts: boolean | null
-          timezone: string | null
-        }
-        Insert: {
-          company_id: string
-          created_at?: string | null
-          currency?: string | null
-          low_stock_alerts?: boolean | null
-          timezone?: string | null
-        }
-        Update: {
-          company_id?: string
-          created_at?: string | null
-          currency?: string | null
-          low_stock_alerts?: boolean | null
-          timezone?: string | null
-        }
-        Relationships: [
           {
-            foreignKeyName: "company_settings_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: true
-            referencedRelation: "companies"
+            foreignKeyName: "inventory_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
       }
       invitations: {
         Row: {
-          accepted_at: string | null
-          company_id: string | null
+          branch_id: string | null
           created_at: string | null
           email: string
-          expires_at: string
+          expires_at: string | null
           id: string
-          invited_by: string
-          role_id: string
+          invited_by: string | null
+          is_system_invite: boolean
+          owner_id: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          status: string
           token: string
         }
         Insert: {
-          accepted_at?: string | null
-          company_id?: string | null
+          branch_id?: string | null
           created_at?: string | null
           email: string
-          expires_at: string
+          expires_at?: string | null
           id?: string
-          invited_by: string
-          role_id: string
+          invited_by?: string | null
+          is_system_invite?: boolean
+          owner_id?: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          status?: string
           token: string
         }
         Update: {
-          accepted_at?: string | null
-          company_id?: string | null
+          branch_id?: string | null
           created_at?: string | null
           email?: string
-          expires_at?: string
+          expires_at?: string | null
           id?: string
-          invited_by?: string
-          role_id?: string
+          invited_by?: string | null
+          is_system_invite?: boolean
+          owner_id?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          status?: string
           token?: string
         }
         Relationships: [
           {
-            foreignKeyName: "invitations_company_id_fkey"
-            columns: ["company_id"]
+            foreignKeyName: "invitations_branch_id_fkey"
+            columns: ["branch_id"]
             isOneToOne: false
-            referencedRelation: "companies"
+            referencedRelation: "branches"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "invitations_invited_by_fkey"
-            columns: ["invited_by"]
+            foreignKeyName: "invitations_branch_id_fkey"
+            columns: ["branch_id"]
             isOneToOne: false
-            referencedRelation: "v_my_profile"
+            referencedRelation: "v_company_users"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "invitations_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_current_user"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "invitations_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_users_full"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "invitations_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "vw_branch_inventory_summary"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "invitations_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "owners"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "invitations_invited_by_fkey"
-            columns: ["invited_by"]
-            isOneToOne: false
-            referencedRelation: "v_user_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "invitations_role_id_fkey"
-            columns: ["role_id"]
-            isOneToOne: false
-            referencedRelation: "roles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "invitations_role_id_fkey"
-            columns: ["role_id"]
-            isOneToOne: false
-            referencedRelation: "v_my_profile"
-            referencedColumns: ["role_id"]
-          },
-          {
-            foreignKeyName: "invitations_role_id_fkey"
-            columns: ["role_id"]
-            isOneToOne: false
-            referencedRelation: "v_user_profiles"
-            referencedColumns: ["role_id"]
           },
         ]
       }
-      owner_invitations: {
+      notifications: {
         Row: {
-          created_at: string | null
-          email: string
-          expires_at: string
+          body: string
+          channel: Database["public"]["Enums"]["notification_channel"]
+          created_at: string
           id: string
-          status: string | null
-          token: string
+          is_read: boolean
+          metadata: Json
+          owner_id: string
+          platform: Database["public"]["Enums"]["notification_platform"]
+          reference_id: string | null
+          reference_type: string | null
+          title: string
+          type: Database["public"]["Enums"]["notification_type"]
+          user_id: string | null
         }
         Insert: {
-          created_at?: string | null
-          email: string
-          expires_at: string
+          body: string
+          channel?: Database["public"]["Enums"]["notification_channel"]
+          created_at?: string
           id?: string
-          status?: string | null
-          token: string
+          is_read?: boolean
+          metadata?: Json
+          owner_id: string
+          platform?: Database["public"]["Enums"]["notification_platform"]
+          reference_id?: string | null
+          reference_type?: string | null
+          title: string
+          type: Database["public"]["Enums"]["notification_type"]
+          user_id?: string | null
         }
         Update: {
-          created_at?: string | null
-          email?: string
-          expires_at?: string
+          body?: string
+          channel?: Database["public"]["Enums"]["notification_channel"]
+          created_at?: string
           id?: string
-          status?: string | null
-          token?: string
+          is_read?: boolean
+          metadata?: Json
+          owner_id?: string
+          platform?: Database["public"]["Enums"]["notification_platform"]
+          reference_id?: string | null
+          reference_type?: string | null
+          title?: string
+          type?: Database["public"]["Enums"]["notification_type"]
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "owners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      owner_relationships: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          requester_id: string
+          status: Database["public"]["Enums"]["relationship_status"]
+          target_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          requester_id: string
+          status?: Database["public"]["Enums"]["relationship_status"]
+          target_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          requester_id?: string
+          status?: Database["public"]["Enums"]["relationship_status"]
+          target_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "owner_relationships_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "owners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "owner_relationships_target_id_fkey"
+            columns: ["target_id"]
+            isOneToOne: false
+            referencedRelation: "owners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      owner_transfer_items: {
+        Row: {
+          id: string
+          notes: string | null
+          owner_transfer_id: string
+          product_id: string
+          qty_received: number | null
+          qty_sent: number
+          unit_cost: number | null
+          unit_price: number
+        }
+        Insert: {
+          id?: string
+          notes?: string | null
+          owner_transfer_id: string
+          product_id: string
+          qty_received?: number | null
+          qty_sent: number
+          unit_cost?: number | null
+          unit_price: number
+        }
+        Update: {
+          id?: string
+          notes?: string | null
+          owner_transfer_id?: string
+          product_id?: string
+          qty_received?: number | null
+          qty_sent?: number
+          unit_cost?: number | null
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "owner_transfer_items_owner_transfer_id_fkey"
+            columns: ["owner_transfer_id"]
+            isOneToOne: false
+            referencedRelation: "owner_transfers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "owner_transfer_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      owner_transfers: {
+        Row: {
+          agreed_price: number | null
+          buyer_owner_id: string
+          created_at: string
+          created_by: string | null
+          currency: Database["public"]["Enums"]["currency_code"]
+          from_branch_id: string
+          id: string
+          notes: string | null
+          received_at: string | null
+          received_by: string | null
+          seller_owner_id: string
+          sent_at: string | null
+          status: Database["public"]["Enums"]["owner_transfer_status"]
+          to_branch_id: string
+          updated_at: string
+        }
+        Insert: {
+          agreed_price?: number | null
+          buyer_owner_id: string
+          created_at?: string
+          created_by?: string | null
+          currency?: Database["public"]["Enums"]["currency_code"]
+          from_branch_id: string
+          id?: string
+          notes?: string | null
+          received_at?: string | null
+          received_by?: string | null
+          seller_owner_id: string
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["owner_transfer_status"]
+          to_branch_id: string
+          updated_at?: string
+        }
+        Update: {
+          agreed_price?: number | null
+          buyer_owner_id?: string
+          created_at?: string
+          created_by?: string | null
+          currency?: Database["public"]["Enums"]["currency_code"]
+          from_branch_id?: string
+          id?: string
+          notes?: string | null
+          received_at?: string | null
+          received_by?: string | null
+          seller_owner_id?: string
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["owner_transfer_status"]
+          to_branch_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "owner_transfers_buyer_owner_id_fkey"
+            columns: ["buyer_owner_id"]
+            isOneToOne: false
+            referencedRelation: "owners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "owner_transfers_from_branch_id_fkey"
+            columns: ["from_branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "owner_transfers_from_branch_id_fkey"
+            columns: ["from_branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_company_users"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "owner_transfers_from_branch_id_fkey"
+            columns: ["from_branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_current_user"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "owner_transfers_from_branch_id_fkey"
+            columns: ["from_branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_users_full"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "owner_transfers_from_branch_id_fkey"
+            columns: ["from_branch_id"]
+            isOneToOne: false
+            referencedRelation: "vw_branch_inventory_summary"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "owner_transfers_seller_owner_id_fkey"
+            columns: ["seller_owner_id"]
+            isOneToOne: false
+            referencedRelation: "owners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "owner_transfers_to_branch_id_fkey"
+            columns: ["to_branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "owner_transfers_to_branch_id_fkey"
+            columns: ["to_branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_company_users"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "owner_transfers_to_branch_id_fkey"
+            columns: ["to_branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_current_user"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "owner_transfers_to_branch_id_fkey"
+            columns: ["to_branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_users_full"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "owner_transfers_to_branch_id_fkey"
+            columns: ["to_branch_id"]
+            isOneToOne: false
+            referencedRelation: "vw_branch_inventory_summary"
+            referencedColumns: ["branch_id"]
+          },
+        ]
+      }
+      owners: {
+        Row: {
+          business_name: string
+          created_at: string
+          email: string
+          id: string
+          is_active: boolean
+          logo_url: string | null
+          name: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          business_name: string
+          created_at?: string
+          email: string
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          business_name?: string
+          created_at?: string
+          email?: string
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name?: string
+          phone?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
-      permissions: {
+      product_categories: {
         Row: {
-          id: string
-          key: Database["core"]["Enums"]["permission_key"]
-        }
-        Insert: {
-          id?: string
-          key: Database["core"]["Enums"]["permission_key"]
-        }
-        Update: {
-          id?: string
-          key?: Database["core"]["Enums"]["permission_key"]
-        }
-        Relationships: []
-      }
-      platform_users: {
-        Row: {
-          created_at: string | null
-          id: string
-          role: string
-        }
-        Insert: {
-          created_at?: string | null
-          id: string
-          role: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          role?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "platform_users_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
-            referencedRelation: "v_my_profile"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "platform_users_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
-            referencedRelation: "v_user_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      profiles: {
-        Row: {
-          avatar_url: string | null
-          company_id: string | null
-          created_at: string | null
-          deleted_at: string | null
-          email: string
-          first_name: string | null
-          full_name: string | null
-          id: string
-          last_name: string | null
-          status: Database["core"]["Enums"]["user_status"]
-          updated_at: string | null
-        }
-        Insert: {
-          avatar_url?: string | null
-          company_id?: string | null
-          created_at?: string | null
-          deleted_at?: string | null
-          email: string
-          first_name?: string | null
-          full_name?: string | null
-          id: string
-          last_name?: string | null
-          status?: Database["core"]["Enums"]["user_status"]
-          updated_at?: string | null
-        }
-        Update: {
-          avatar_url?: string | null
-          company_id?: string | null
-          created_at?: string | null
-          deleted_at?: string | null
-          email?: string
-          first_name?: string | null
-          full_name?: string | null
-          id?: string
-          last_name?: string | null
-          status?: Database["core"]["Enums"]["user_status"]
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "profiles_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
-            referencedRelation: "v_my_profile"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "profiles_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
-            referencedRelation: "v_user_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      role_permissions: {
-        Row: {
-          permission_id: string
-          role_id: string
-        }
-        Insert: {
-          permission_id: string
-          role_id: string
-        }
-        Update: {
-          permission_id?: string
-          role_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "role_permissions_role_id_fkey"
-            columns: ["role_id"]
-            isOneToOne: false
-            referencedRelation: "roles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "role_permissions_role_id_fkey"
-            columns: ["role_id"]
-            isOneToOne: false
-            referencedRelation: "v_my_profile"
-            referencedColumns: ["role_id"]
-          },
-          {
-            foreignKeyName: "role_permissions_role_id_fkey"
-            columns: ["role_id"]
-            isOneToOne: false
-            referencedRelation: "v_user_profiles"
-            referencedColumns: ["role_id"]
-          },
-        ]
-      }
-      roles: {
-        Row: {
-          company_id: string | null
           created_at: string
           description: string | null
           id: string
-          is_system_role: boolean | null
+          is_active: boolean
+          is_system: boolean
           name: string
-          updated_at: string | null
+          owner_id: string | null
         }
         Insert: {
-          company_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
-          is_system_role?: boolean | null
+          is_active?: boolean
+          is_system?: boolean
           name: string
-          updated_at?: string | null
+          owner_id?: string | null
         }
         Update: {
-          company_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
-          is_system_role?: boolean | null
+          is_active?: boolean
+          is_system?: boolean
           name?: string
-          updated_at?: string | null
+          owner_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "roles_company_id_fkey"
-            columns: ["company_id"]
+            foreignKeyName: "product_categories_owner_id_fkey"
+            columns: ["owner_id"]
             isOneToOne: false
-            referencedRelation: "companies"
+            referencedRelation: "owners"
             referencedColumns: ["id"]
           },
         ]
       }
-      user_permissions: {
+      product_units: {
         Row: {
-          permission: Database["core"]["Enums"]["permission_key"]
-          user_id: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          is_system: boolean
+          label: string
+          name: string
+          owner_id: string | null
         }
         Insert: {
-          permission: Database["core"]["Enums"]["permission_key"]
-          user_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_system?: boolean
+          label: string
+          name: string
+          owner_id?: string | null
         }
         Update: {
-          permission?: Database["core"]["Enums"]["permission_key"]
-          user_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_system?: boolean
+          label?: string
+          name?: string
+          owner_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "user_permissions_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "product_units_owner_id_fkey"
+            columns: ["owner_id"]
             isOneToOne: false
-            referencedRelation: "v_my_profile"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_permissions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "v_user_profiles"
+            referencedRelation: "owners"
             referencedColumns: ["id"]
           },
         ]
       }
-      user_roles: {
+      products: {
         Row: {
-          company_id: string | null
+          category_id: string
+          cost_price: number | null
+          created_at: string
+          description: string | null
           id: string
-          role_id: string | null
-          user_id: string
+          image_url: string | null
+          is_active: boolean
+          min_stock_alert: number
+          name: string
+          owner_id: string
+          sale_price: number | null
+          sku: string | null
+          unit_id: string
+          updated_at: string
         }
         Insert: {
-          company_id?: string | null
+          category_id: string
+          cost_price?: number | null
+          created_at?: string
+          description?: string | null
           id?: string
-          role_id?: string | null
-          user_id: string
+          image_url?: string | null
+          is_active?: boolean
+          min_stock_alert?: number
+          name: string
+          owner_id: string
+          sale_price?: number | null
+          sku?: string | null
+          unit_id: string
+          updated_at?: string
         }
         Update: {
-          company_id?: string | null
+          category_id?: string
+          cost_price?: number | null
+          created_at?: string
+          description?: string | null
           id?: string
-          role_id?: string | null
-          user_id?: string
+          image_url?: string | null
+          is_active?: boolean
+          min_stock_alert?: number
+          name?: string
+          owner_id?: string
+          sale_price?: number | null
+          sku?: string | null
+          unit_id?: string
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "user_roles_company_fk"
-            columns: ["company_id"]
+            foreignKeyName: "products_category_id_fkey"
+            columns: ["category_id"]
             isOneToOne: false
-            referencedRelation: "companies"
+            referencedRelation: "product_categories"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "user_roles_role_id_fkey"
-            columns: ["role_id"]
+            foreignKeyName: "products_category_id_fkey"
+            columns: ["category_id"]
             isOneToOne: false
-            referencedRelation: "roles"
+            referencedRelation: "vw_inventory_full"
+            referencedColumns: ["category_id"]
+          },
+          {
+            foreignKeyName: "products_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "owners"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "user_roles_role_id_fkey"
-            columns: ["role_id"]
+            foreignKeyName: "products_unit_id_fkey"
+            columns: ["unit_id"]
             isOneToOne: false
-            referencedRelation: "v_my_profile"
-            referencedColumns: ["role_id"]
+            referencedRelation: "product_units"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "user_roles_role_id_fkey"
-            columns: ["role_id"]
+            foreignKeyName: "products_unit_id_fkey"
+            columns: ["unit_id"]
             isOneToOne: false
-            referencedRelation: "v_user_profiles"
-            referencedColumns: ["role_id"]
+            referencedRelation: "vw_inventory_full"
+            referencedColumns: ["unit_id"]
           },
         ]
       }
-    }
-    Views: {
-      v_my_profile: {
+      stock_alerts: {
         Row: {
-          avatar_url: string | null
-          company_id: string | null
-          company_name: string | null
-          created_at: string | null
-          email: string | null
-          first_name: string | null
-          full_name: string | null
-          id: string | null
-          is_owner: boolean | null
-          is_root: boolean | null
-          last_name: string | null
-          permissions: string[] | null
-          role_id: string | null
-          role_name: string | null
-          status: Database["core"]["Enums"]["user_status"] | null
-          updated_at: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      v_user_profiles: {
-        Row: {
-          avatar_url: string | null
-          company_id: string | null
-          company_name: string | null
-          created_at: string | null
-          email: string | null
-          first_name: string | null
-          full_name: string | null
-          id: string | null
-          is_owner: boolean | null
-          is_root: boolean | null
-          last_name: string | null
-          permissions: string[] | null
-          role_id: string | null
-          role_name: string | null
-          status: Database["core"]["Enums"]["user_status"] | null
-          updated_at: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-    }
-    Functions: {
-      current_company_id: { Args: never; Returns: string }
-      current_role: { Args: never; Returns: string }
-      get_id_root_role: { Args: never; Returns: string }
-      get_permissions_by_user: {
-        Args: { p_user_id: string }
-        Returns: {
-          key: string
-        }[]
-      }
-      get_role_ids_by_names: {
-        Args: { role_names: string[] }
-        Returns: string[]
-      }
-      get_roleid_by_name: { Args: { role_name: string }; Returns: string }
-      has_any_role: {
-        Args: { roles: string[]; target_company: string }
-        Returns: boolean
-      }
-      has_role: {
-        Args: { required_role: string; target_company: string }
-        Returns: boolean
-      }
-      is_root: { Args: never; Returns: boolean }
-      same_company: { Args: { target_company: string }; Returns: boolean }
-      user_branches: { Args: never; Returns: string[] }
-    }
-    Enums: {
-      permission_key:
-        | "users.read"
-        | "users.invite"
-        | "users.update"
-        | "users.remove"
-        | "roles.assign"
-        | "company.create"
-        | "company.read"
-        | "company.update"
-        | "company.delete"
-        | "branches.create"
-        | "branches.read"
-        | "branches.update"
-        | "branches.delete"
-        | "shipments.create"
-        | "shipments.read"
-        | "shipments.update"
-        | "purchases.create"
-        | "purchases.read"
-        | "purchases.update"
-      user_status: "active" | "inactive" | "deleted"
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
-  events: {
-    Tables: {
-      events: {
-        Row: {
-          aggregate: string
+          branch_id: string
           id: string
-          occurred_at: string
-          payload: Json
-          processed: boolean
-          type: string
-        }
-        Insert: {
-          aggregate: string
-          id?: string
-          occurred_at?: string
-          payload: Json
-          processed?: boolean
-          type: string
-        }
-        Update: {
-          aggregate?: string
-          id?: string
-          occurred_at?: string
-          payload?: Json
-          processed?: boolean
-          type?: string
-        }
-        Relationships: []
-      }
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      emit: { Args: { event_type: string; payload: Json }; Returns: undefined }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
-  inventory: {
-    Tables: {
-      inventory: {
-        Row: {
-          branch_id: string | null
-          id: string
-          max_stock: number | null
-          min_stock: number | null
-          product_id: string | null
-          stock_available: number | null
-          stock_in_transit: number | null
-          stock_reserved: number | null
-          updated_at: string | null
-        }
-        Insert: {
-          branch_id?: string | null
-          id?: string
-          max_stock?: number | null
-          min_stock?: number | null
-          product_id?: string | null
-          stock_available?: number | null
-          stock_in_transit?: number | null
-          stock_reserved?: number | null
-          updated_at?: string | null
-        }
-        Update: {
-          branch_id?: string | null
-          id?: string
-          max_stock?: number | null
-          min_stock?: number | null
-          product_id?: string | null
-          stock_available?: number | null
-          stock_in_transit?: number | null
-          stock_reserved?: number | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      inventory_batches: {
-        Row: {
-          batch_number: string | null
-          expires_at: string | null
-          id: string
-          inventory_id: string | null
+          notified_at: string
+          owner_id: string
+          product_id: string
           quantity: number
-          serial_number: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: Database["public"]["Enums"]["alert_status"]
+          threshold: number
         }
         Insert: {
-          batch_number?: string | null
-          expires_at?: string | null
+          branch_id: string
           id?: string
-          inventory_id?: string | null
+          notified_at?: string
+          owner_id: string
+          product_id: string
           quantity: number
-          serial_number?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: Database["public"]["Enums"]["alert_status"]
+          threshold: number
         }
         Update: {
-          batch_number?: string | null
-          expires_at?: string | null
+          branch_id?: string
           id?: string
-          inventory_id?: string | null
+          notified_at?: string
+          owner_id?: string
+          product_id?: string
           quantity?: number
-          serial_number?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: Database["public"]["Enums"]["alert_status"]
+          threshold?: number
         }
         Relationships: [
           {
-            foreignKeyName: "inventory_batches_inventory_id_fkey"
-            columns: ["inventory_id"]
+            foreignKeyName: "stock_alerts_branch_id_fkey"
+            columns: ["branch_id"]
             isOneToOne: false
-            referencedRelation: "inventory"
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_alerts_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_company_users"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "stock_alerts_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_current_user"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "stock_alerts_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_users_full"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "stock_alerts_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "vw_branch_inventory_summary"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "stock_alerts_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "owners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_alerts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
       }
       stock_movements: {
         Row: {
-          branch_id: string | null
-          created_at: string | null
-          delta: number
+          branch_id: string
+          created_at: string
+          created_by: string | null
           id: string
-          product_id: string | null
-          reason: string | null
+          movement_type: Database["public"]["Enums"]["movement_type"]
+          notes: string | null
+          owner_id: string
+          product_id: string
+          quantity: number
+          quantity_after: number | null
+          quantity_before: number | null
           reference_id: string | null
-          reference_table: string | null
+          reference_type: string | null
+          unit_cost: number | null
         }
         Insert: {
-          branch_id?: string | null
-          created_at?: string | null
-          delta: number
+          branch_id: string
+          created_at?: string
+          created_by?: string | null
           id?: string
-          product_id?: string | null
-          reason?: string | null
+          movement_type: Database["public"]["Enums"]["movement_type"]
+          notes?: string | null
+          owner_id: string
+          product_id: string
+          quantity: number
+          quantity_after?: number | null
+          quantity_before?: number | null
           reference_id?: string | null
-          reference_table?: string | null
+          reference_type?: string | null
+          unit_cost?: number | null
         }
         Update: {
-          branch_id?: string | null
-          created_at?: string | null
-          delta?: number
+          branch_id?: string
+          created_at?: string
+          created_by?: string | null
           id?: string
-          product_id?: string | null
-          reason?: string | null
+          movement_type?: Database["public"]["Enums"]["movement_type"]
+          notes?: string | null
+          owner_id?: string
+          product_id?: string
+          quantity?: number
+          quantity_after?: number | null
+          quantity_before?: number | null
           reference_id?: string | null
-          reference_table?: string | null
+          reference_type?: string | null
+          unit_cost?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "stock_movements_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_company_users"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "stock_movements_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_current_user"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "stock_movements_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_users_full"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "stock_movements_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "vw_branch_inventory_summary"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "stock_movements_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "owners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
-      stock_transfers: {
+      system_admins: {
         Row: {
           created_at: string | null
-          from_branch_id: string | null
-          id: string
-          product_id: string | null
-          quantity: number
-          received_at: string | null
-          status: string | null
-          to_branch_id: string | null
+          user_id: string
         }
         Insert: {
           created_at?: string | null
-          from_branch_id?: string | null
-          id?: string
-          product_id?: string | null
-          quantity: number
-          received_at?: string | null
-          status?: string | null
-          to_branch_id?: string | null
+          user_id: string
         }
         Update: {
           created_at?: string | null
-          from_branch_id?: string | null
-          id?: string
-          product_id?: string | null
-          quantity?: number
-          received_at?: string | null
-          status?: string | null
-          to_branch_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
+      transfer_items: {
+        Row: {
+          id: string
+          notes: string | null
+          product_id: string
+          qty_received: number | null
+          qty_sent: number
+          transfer_id: string
+          unit_cost: number | null
+        }
+        Insert: {
+          id?: string
+          notes?: string | null
+          product_id: string
+          qty_received?: number | null
+          qty_sent: number
+          transfer_id: string
+          unit_cost?: number | null
+        }
+        Update: {
+          id?: string
+          notes?: string | null
+          product_id?: string
+          qty_received?: number | null
+          qty_sent?: number
+          transfer_id?: string
+          unit_cost?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transfer_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfer_items_transfer_id_fkey"
+            columns: ["transfer_id"]
+            isOneToOne: false
+            referencedRelation: "transfers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transfers: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          from_branch_id: string | null
+          id: string
+          notes: string | null
+          owner_id: string
+          received_at: string | null
+          received_by: string | null
+          sent_at: string | null
+          status: Database["public"]["Enums"]["transfer_status"]
+          to_branch_id: string
+          transfer_type: Database["public"]["Enums"]["transfer_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          from_branch_id?: string | null
+          id?: string
+          notes?: string | null
+          owner_id: string
+          received_at?: string | null
+          received_by?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["transfer_status"]
+          to_branch_id: string
+          transfer_type: Database["public"]["Enums"]["transfer_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          from_branch_id?: string | null
+          id?: string
+          notes?: string | null
+          owner_id?: string
+          received_at?: string | null
+          received_by?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["transfer_status"]
+          to_branch_id?: string
+          transfer_type?: Database["public"]["Enums"]["transfer_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transfers_from_branch_id_fkey"
+            columns: ["from_branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfers_from_branch_id_fkey"
+            columns: ["from_branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_company_users"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "transfers_from_branch_id_fkey"
+            columns: ["from_branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_current_user"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "transfers_from_branch_id_fkey"
+            columns: ["from_branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_users_full"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "transfers_from_branch_id_fkey"
+            columns: ["from_branch_id"]
+            isOneToOne: false
+            referencedRelation: "vw_branch_inventory_summary"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "transfers_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "owners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfers_to_branch_id_fkey"
+            columns: ["to_branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfers_to_branch_id_fkey"
+            columns: ["to_branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_company_users"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "transfers_to_branch_id_fkey"
+            columns: ["to_branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_current_user"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "transfers_to_branch_id_fkey"
+            columns: ["to_branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_users_full"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "transfers_to_branch_id_fkey"
+            columns: ["to_branch_id"]
+            isOneToOne: false
+            referencedRelation: "vw_branch_inventory_summary"
+            referencedColumns: ["branch_id"]
+          },
+        ]
+      }
+      user_profiles: {
+        Row: {
+          avatar_url: string | null
+          branch_id: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          owner_id: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          branch_id?: string | null
+          created_at?: string
+          id: string
+          is_active?: boolean
+          name: string
+          owner_id?: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          branch_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          owner_id?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_profiles_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_profiles_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_company_users"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "user_profiles_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_current_user"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "user_profiles_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_users_full"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "user_profiles_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "vw_branch_inventory_summary"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "user_profiles_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "owners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
-      [_ in never]: never
+      v_company_users: {
+        Row: {
+          avatar_url: string | null
+          branch_id: string | null
+          branch_name: string | null
+          business_name: string | null
+          email: string | null
+          is_active: boolean | null
+          logo_url: string | null
+          name: string | null
+          owner_id: string | null
+          role: Database["public"]["Enums"]["user_role"] | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_profiles_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "owners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_current_user: {
+        Row: {
+          avatar_url: string | null
+          branch_id: string | null
+          branch_name: string | null
+          business_name: string | null
+          email: string | null
+          is_active: boolean | null
+          is_owner: boolean | null
+          is_root: boolean | null
+          logo_url: string | null
+          name: string | null
+          owner_id: string | null
+          role: Database["public"]["Enums"]["user_role"] | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_profiles_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "owners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_users_full: {
+        Row: {
+          avatar_url: string | null
+          branch_id: string | null
+          branch_name: string | null
+          business_name: string | null
+          email: string | null
+          is_active: boolean | null
+          is_owner: boolean | null
+          is_root: boolean | null
+          logo_url: string | null
+          name: string | null
+          owner_id: string | null
+          role: Database["public"]["Enums"]["user_role"] | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_profiles_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "owners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vw_active_alerts: {
+        Row: {
+          branch_id: string | null
+          branch_name: string | null
+          branch_type: Database["public"]["Enums"]["branch_type"] | null
+          category_name: string | null
+          current_qty: number | null
+          description: string | null
+          id: string | null
+          notified_at: string | null
+          owner_id: string | null
+          product_id: string | null
+          product_name: string | null
+          status: Database["public"]["Enums"]["alert_status"] | null
+          threshold: number | null
+          units_below_threshold: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_alerts_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_alerts_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_company_users"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "stock_alerts_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_current_user"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "stock_alerts_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_users_full"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "stock_alerts_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "vw_branch_inventory_summary"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "stock_alerts_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "owners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_alerts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vw_branch_inventory_summary: {
+        Row: {
+          branch_id: string | null
+          branch_name: string | null
+          branch_type: Database["public"]["Enums"]["branch_type"] | null
+          low_stock_count: number | null
+          out_of_stock_count: number | null
+          owner_id: string | null
+          total_products: number | null
+          total_stock_value: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "branches_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "owners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vw_inventory_full: {
+        Row: {
+          branch_id: string | null
+          branch_name: string | null
+          branch_type: Database["public"]["Enums"]["branch_type"] | null
+          category_id: string | null
+          category_name: string | null
+          cost_price: number | null
+          description: string | null
+          id: string | null
+          min_stock_alert: number | null
+          owner_id: string | null
+          product_id: string | null
+          product_name: string | null
+          quantity: number | null
+          sale_price: number | null
+          sku: string | null
+          stock_status: Database["public"]["Enums"]["stock_status"] | null
+          stock_value: number | null
+          unit_id: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_company_users"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "inventory_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_current_user"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "inventory_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_users_full"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "inventory_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "vw_branch_inventory_summary"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "inventory_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "owners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vw_transfer_items_full: {
+        Row: {
+          category_name: string | null
+          description: string | null
+          from_branch_id: string | null
+          id: string | null
+          line_total: number | null
+          owner_id: string | null
+          product_id: string | null
+          product_name: string | null
+          qty_difference: number | null
+          qty_received: number | null
+          qty_sent: number | null
+          to_branch_id: string | null
+          transfer_id: string | null
+          transfer_status: Database["public"]["Enums"]["transfer_status"] | null
+          unit_cost: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transfer_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfer_items_transfer_id_fkey"
+            columns: ["transfer_id"]
+            isOneToOne: false
+            referencedRelation: "transfers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfers_from_branch_id_fkey"
+            columns: ["from_branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfers_from_branch_id_fkey"
+            columns: ["from_branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_company_users"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "transfers_from_branch_id_fkey"
+            columns: ["from_branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_current_user"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "transfers_from_branch_id_fkey"
+            columns: ["from_branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_users_full"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "transfers_from_branch_id_fkey"
+            columns: ["from_branch_id"]
+            isOneToOne: false
+            referencedRelation: "vw_branch_inventory_summary"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "transfers_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "owners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfers_to_branch_id_fkey"
+            columns: ["to_branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfers_to_branch_id_fkey"
+            columns: ["to_branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_company_users"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "transfers_to_branch_id_fkey"
+            columns: ["to_branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_current_user"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "transfers_to_branch_id_fkey"
+            columns: ["to_branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_users_full"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "transfers_to_branch_id_fkey"
+            columns: ["to_branch_id"]
+            isOneToOne: false
+            referencedRelation: "vw_branch_inventory_summary"
+            referencedColumns: ["branch_id"]
+          },
+        ]
+      }
+      vw_unread_notifications: {
+        Row: {
+          body: string | null
+          channel: Database["public"]["Enums"]["notification_channel"] | null
+          created_at: string | null
+          id: string | null
+          metadata: Json | null
+          owner_id: string | null
+          platform: Database["public"]["Enums"]["notification_platform"] | null
+          reference_id: string | null
+          reference_type: string | null
+          title: string | null
+          type: Database["public"]["Enums"]["notification_type"] | null
+          user_id: string | null
+        }
+        Insert: {
+          body?: string | null
+          channel?: Database["public"]["Enums"]["notification_channel"] | null
+          created_at?: string | null
+          id?: string | null
+          metadata?: Json | null
+          owner_id?: string | null
+          platform?: Database["public"]["Enums"]["notification_platform"] | null
+          reference_id?: string | null
+          reference_type?: string | null
+          title?: string | null
+          type?: Database["public"]["Enums"]["notification_type"] | null
+          user_id?: string | null
+        }
+        Update: {
+          body?: string | null
+          channel?: Database["public"]["Enums"]["notification_channel"] | null
+          created_at?: string | null
+          id?: string | null
+          metadata?: Json | null
+          owner_id?: string | null
+          platform?: Database["public"]["Enums"]["notification_platform"] | null
+          reference_id?: string | null
+          reference_type?: string | null
+          title?: string | null
+          type?: Database["public"]["Enums"]["notification_type"] | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "owners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
-      [_ in never]: never
+      adjust_inventory: {
+        Args: {
+          p_branch_id: string
+          p_new_qty: number
+          p_notes: string
+          p_owner_id: string
+          p_product_id: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
+      confirm_transfer_received: {
+        Args: { p_received: Json; p_transfer_id: string; p_user_id: string }
+        Returns: Json
+      }
+      confirm_transfer_sent: {
+        Args: { p_transfer_id: string; p_user_id: string }
+        Returns: Json
+      }
+      get_my_branch_id: { Args: never; Returns: string }
+      get_my_owner_id: { Args: never; Returns: string }
+      get_my_role: { Args: never; Returns: string }
+      record_stock_movement: {
+        Args: {
+          p_branch_id: string
+          p_created_by: string
+          p_movement_type: Database["public"]["Enums"]["movement_type"]
+          p_notes: string
+          p_owner_id: string
+          p_product_id: string
+          p_quantity: number
+          p_reference_id: string
+          p_reference_type: string
+          p_unit_cost: number
+        }
+        Returns: undefined
+      }
+      register_purchase: {
+        Args: {
+          p_branch_id: string
+          p_items: Json
+          p_notes: string
+          p_owner_id: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
-  public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      [_ in never]: never
-    }
-    Enums: {
-      user_role: "root" | "admin" | "user"
-      user_status: "active" | "deactive"
+      alert_status: "active" | "resolved" | "snoozed"
+      branch_type: "warehouse" | "point_of_sale"
+      currency_code: "MXN" | "USD"
+      movement_type:
+        | "in_transfer"
+        | "out_transfer"
+        | "in_purchase"
+        | "out_sale"
+        | "adjustment_in"
+        | "adjustment_out"
+        | "waste"
+        | "production_in"
+        | "production_out"
+      notification_channel: "in_app" | "push" | "email"
+      notification_platform: "web" | "mobile" | "all"
+      notification_type:
+        | "low_stock"
+        | "transfer_sent"
+        | "transfer_received"
+        | "transfer_partial"
+        | "transfer_cancelled"
+        | "owner_transfer_sent"
+        | "owner_transfer_received"
+        | "owner_transfer_partial"
+        | "owner_transfer_cancelled"
+        | "owner_relationship_invite"
+        | "owner_relationship_active"
+      owner_transfer_status:
+        | "pending"
+        | "in_transit"
+        | "received"
+        | "partial"
+        | "cancelled"
+      relationship_status: "pending" | "active" | "suspended"
+      stock_status: "ok" | "low" | "out_of_stock"
+      transfer_status:
+        | "pending"
+        | "in_transit"
+        | "received"
+        | "partial"
+        | "cancelled"
+      transfer_type: "supply" | "inter_branch" | "purchase" | "return"
+      user_role: "owner" | "manager" | "warehouse" | "branch_staff"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -950,42 +1809,55 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  core: {
-    Enums: {
-      permission_key: [
-        "users.read",
-        "users.invite",
-        "users.update",
-        "users.remove",
-        "roles.assign",
-        "company.create",
-        "company.read",
-        "company.update",
-        "company.delete",
-        "branches.create",
-        "branches.read",
-        "branches.update",
-        "branches.delete",
-        "shipments.create",
-        "shipments.read",
-        "shipments.update",
-        "purchases.create",
-        "purchases.read",
-        "purchases.update",
-      ],
-      user_status: ["active", "inactive", "deleted"],
-    },
-  },
-  events: {
-    Enums: {},
-  },
-  inventory: {
-    Enums: {},
-  },
   public: {
     Enums: {
-      user_role: ["root", "admin", "user"],
-      user_status: ["active", "deactive"],
+      alert_status: ["active", "resolved", "snoozed"],
+      branch_type: ["warehouse", "point_of_sale"],
+      currency_code: ["MXN", "USD"],
+      movement_type: [
+        "in_transfer",
+        "out_transfer",
+        "in_purchase",
+        "out_sale",
+        "adjustment_in",
+        "adjustment_out",
+        "waste",
+        "production_in",
+        "production_out",
+      ],
+      notification_channel: ["in_app", "push", "email"],
+      notification_platform: ["web", "mobile", "all"],
+      notification_type: [
+        "low_stock",
+        "transfer_sent",
+        "transfer_received",
+        "transfer_partial",
+        "transfer_cancelled",
+        "owner_transfer_sent",
+        "owner_transfer_received",
+        "owner_transfer_partial",
+        "owner_transfer_cancelled",
+        "owner_relationship_invite",
+        "owner_relationship_active",
+      ],
+      owner_transfer_status: [
+        "pending",
+        "in_transit",
+        "received",
+        "partial",
+        "cancelled",
+      ],
+      relationship_status: ["pending", "active", "suspended"],
+      stock_status: ["ok", "low", "out_of_stock"],
+      transfer_status: [
+        "pending",
+        "in_transit",
+        "received",
+        "partial",
+        "cancelled",
+      ],
+      transfer_type: ["supply", "inter_branch", "purchase", "return"],
+      user_role: ["owner", "manager", "warehouse", "branch_staff"],
     },
   },
 } as const

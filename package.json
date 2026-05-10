@@ -7,7 +7,7 @@
 		"start": "wrangler dev --env dev",
 		"test": "vitest",
 		"cf-typegen": "wrangler types",
-		"supabase:types": "npx --yes supabase@latest gen types typescript --project-id ckcozmrongodmgxcnxap --schema public,core,inventory,events > src/shared/supabase/types.ts"
+		"supabase:types": "npx --yes supabase@latest gen types typescript --project-id ambutlpchwroqsgceicw --schema public > src/shared/supabase/types.ts"
 	},
 	"devDependencies": {
 		"@cloudflare/vitest-pool-workers": "^0.12.4",
@@ -23,7 +23,7 @@
 		"chanfana": "3.0.0",
 		"hono": "4.12.8",
 		"resend": "6.7.0",
-		"zod": "4.3.5"
+		"zod": "4.4.3"
 	},
-	"packageManager": "pnpm@10.32.1"
+	"packageManager": "pnpm@10.15.0"
 }

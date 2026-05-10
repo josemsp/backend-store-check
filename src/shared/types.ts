@@ -4,45 +4,45 @@ export enum UserRole {
     ROOT = 'root',
     OWNER = 'owner',
     MANAGER = 'manager',
-    SUPPLIER = 'supplier'
+    SUPPLIER = 'supplier',
+    CASHIER = 'cashier',
+    VIEWER = 'viewer'
 }
 
-
 export enum Permission {
-    // Usuarios
-    USER_READ_OWN = 'user:read:own',
-    USER_READ_ORG = 'user:read:org',
-    USER_READ_ALL = 'user:read:all',
+    OWNER_READ = 'owner:read',
+    OWNER_UPDATE = 'owner:update',
+    OWNER_DELETE = 'owner:delete',
+    BRANCH_CREATE = 'branch:create',
+    BRANCH_READ = 'branch:read',
+    BRANCH_UPDATE = 'branch:update',
+    BRANCH_DELETE = 'branch:delete',
     USER_CREATE = 'user:create',
-    USER_UPDATE_OWN = 'user:update:own',
-    USER_UPDATE_ORG = 'user:update:org',
-    USER_UPDATE_ALL = 'user:update:all',
+    USER_READ = 'user:read',
+    USER_UPDATE = 'user:update',
     USER_DELETE = 'user:delete',
-
-    // Organizaciones
-    ORG_READ_OWN = 'org:read:own',
-    ORG_READ_ALL = 'org:read:all',
-    ORG_CREATE = 'org:create',
-    ORG_UPDATE_OWN = 'org:update:own',
-    ORG_UPDATE_ALL = 'org:update:all',
-    ORG_DELETE = 'org:delete',
-
-    // Productos
-    PRODUCT_READ_OWN = 'product:read:own',
-    PRODUCT_READ_ORG = 'product:read:org',
-    PRODUCT_READ_ALL = 'product:read:all',
     PRODUCT_CREATE = 'product:create',
+    PRODUCT_READ = 'product:read',
     PRODUCT_UPDATE = 'product:update',
     PRODUCT_DELETE = 'product:delete',
-
-    // Roles
-    ROLE_ASSIGN = 'role:assign',
-    ROLE_REVOKE = 'role:revoke',
-
-    // Audit
-    AUDIT_READ_OWN = 'audit:read:own',
-    AUDIT_READ_ORG = 'audit:read:org',
-    AUDIT_READ_ALL = 'audit:read:all'
+    INVENTORY_READ = 'inventory:read',
+    INVENTORY_UPDATE = 'inventory:update',
+    TRANSFER_CREATE = 'transfer:create',
+    TRANSFER_READ = 'transfer:read',
+    TRANSFER_UPDATE = 'transfer:update',
+    TRANSFER_CANCEL = 'transfer:cancel',
+    STOCK_MOVEMENT_CREATE = 'stock_movement:create',
+    STOCK_MOVEMENT_READ = 'stock_movement:read',
+    STOCK_ALERT_READ = 'stock_alert:read',
+    STOCK_ALERT_RESOLVE = 'stock_alert:resolve',
+    NOTIFICATION_READ = 'notification:read',
+    NOTIFICATION_UPDATE = 'notification:update',
+    OWNER_RELATIONSHIP_CREATE = 'owner_relationship:create',
+    OWNER_RELATIONSHIP_READ = 'owner_relationship:read',
+    OWNER_RELATIONSHIP_UPDATE = 'owner_relationship:update',
+    OWNER_TRANSFER_CREATE = 'owner_transfer:create',
+    OWNER_TRANSFER_READ = 'owner_transfer:read',
+    OWNER_TRANSFER_UPDATE = 'owner_transfer:update'
 }
 
 export interface AuthContext {

@@ -1,45 +1,50 @@
 import { SupabaseClient } from "@supabase/supabase-js";
-import { AcceptInvitationInput, InvitationsInput } from "./invitations.types";
+import { Database } from "../../shared/supabase/types";
 import { Context } from "hono";
 import { AppContext } from "../../shared/supabase/general";
-import { Database } from "../../shared/supabase/types";
 import { Resend } from "resend";
 import { InvitationEmail } from "../../infra/email/templates/Invitation";
+import { InviteUserInput } from "./invitations.types";
 
 export class InvitationsService {
-    constructor(private supabase: SupabaseClient<Database>, private context: Context<AppContext>, private userId?: string) { }
+    constructor(private supabase: SupabaseClient<Database>, private context: Context<AppContext>) { }
 
-    async createInvitation({ redirectTo, userData }: { redirectTo?: string, userData: InvitationsInput }) {
-        const { email, roleId, companyId, expiresAt, token, invitedBy, roleName } = userData;
+    async createInvitation({ redirectTo, userData }: { redirectTo?: string, userData: InviteUserInput }) {
+        const { email, ownerId, name, role, branchId, phone } = userData;
 
-        const { error } = await this.supabase
-            .schema('core')
+        const token = crypto.randomUUID();
+        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+        const { error: insertError } = await this.supabase
             .from('invitations')
-            .upsert({
+            .insert({
                 email,
-                role_id: roleId,
-                company_id: companyId,
+                owner_id: ownerId,
+                branch_id: branchId || null,
+                role,
+                invited_by: null,
                 token,
-                invited_by: invitedBy,
-                expires_at: expiresAt.toISOString(),
-            }, { onConflict: 'email' });
+                status: 'pending',
+                is_system_invite: false,
+                expires_at: expiresAt,
+            } as Database['public']['Tables']['invitations']['Insert']);
 
-        if (error) throw new Error(error.message);
+        if (insertError) throw new Error(insertError.message);
 
-        const { data, error: errorInvitation } = await this.supabase.auth.admin.generateLink({
+        const { data, error } = await this.supabase.auth.admin.generateLink({
             type: 'magiclink',
             email,
             options: {
                 redirectTo,
                 data: {
-                    role_id: roleId,
-                    company_id: companyId,
-                    role_name: roleName
+                    owner_id: ownerId,
+                    name,
+                    role
                 }
             }
         });
 
-        if (errorInvitation) throw new Error(errorInvitation.message);
+        if (error) throw new Error(error.message);
 
         const actionLink = data.properties.action_link;
         const resend = new Resend(this.context.env.RESEND_API_KEY);
@@ -48,7 +53,8 @@ export class InvitationsService {
             from: 'STORE-CHECK <onboarding@resend.dev>',
             to: [email],
             subject: 'Invitation to join Store Check',
-            react: InvitationEmail({ actionLink, roleName }),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            react: InvitationEmail({ actionLink, roleName: role as any }),
         });
 
         if (response.error) throw new Error(response.error.message);
@@ -56,73 +62,51 @@ export class InvitationsService {
         return response.data;
     }
 
-    async validateInvitation(token: string) {
-        type Invitation = {
-            email: string;
-            roles: { id: string, name: string };
-            accepted_at: string | null;
-            expires_at: string;
-            company_id: string | null;
-        };
+    async acceptInvitation(payload: { userId: string; email: string; ownerId: string; name: string; role: Database['public']['Enums']['user_role']; branchId?: string | null; phone?: string | null; avatarUrl?: string | null }) {
+        const { userId, email, ownerId, name, role, branchId, phone, avatarUrl } = payload;
 
-        const { data, error } = await this.supabase
-            .schema('core')
+        const { data: invitation, error: invitationError } = await this.supabase
             .from('invitations')
-            .select('email, roles!inner(id, name), accepted_at, expires_at, company_id')
-            .eq('token', token)
-            .maybeSingle()
-            .overrideTypes<Invitation>();
+            .select('*')
+            .eq('email', email)
+            .eq('owner_id', ownerId)
+            .eq('status', 'pending')
+            .single();
 
-        if (error) throw new Error(error.message);
+        if (invitationError || !invitation) {
+            throw new Error('No pending invitation found');
+        }
 
-        if (!data) throw new Error('Invitation not found');
+        if (invitation.expires_at && new Date(invitation.expires_at) < new Date()) {
+            await this.supabase
+                .from('invitations')
+                .update({ status: 'expired' })
+                .eq('id', invitation.id);
+            throw new Error('Invitation has expired');
+        }
 
-        if (data.accepted_at) throw new Error('Invitation already accepted');
-
-        if (data.expires_at < new Date().toISOString()) throw new Error('Invitation expired');
-
-        return {
-            email: data.email,
-            role_id: data.roles.id,
-            role_name: data.roles.name,
-            company_id: data.company_id,
-            is_new_company: !data.company_id
-        };
-    }
-
-    async acceptInvitation(payload: AcceptInvitationInput & { userId: string }) {
-        const { token, avatarUrl, firstName, lastName, userId } = payload;
-
-        // 1. Validar token
-        const invitation = await this.validateInvitation(token);
-
-        const email = invitation.email;
-
-        if (!userId) throw new Error('User not found');
-
-        // 3. Crear Profile (Upsert para manejar ambos casos) y 4. Asignar Rol
-        const { error: profileError } = await this.supabase.schema('core').from('profiles')
+        const { error: profileError } = await this.supabase
+            .from('user_profiles')
             .upsert({
                 id: userId,
-                email,
-                first_name: firstName,
-                last_name: lastName,
-                company_id: invitation.company_id, // Asignar compañía si existe en invitación
-                avatar_url: avatarUrl
+                owner_id: ownerId,
+                name,
+                role,
+                branch_id: branchId || null,
+                phone: phone || null,
+                avatar_url: avatarUrl || null,
+                is_active: true,
             });
 
         if (profileError) throw new Error(profileError.message);
 
-        // 5. Update invitations set accepted_at = now()
-        const accepted_at = new Date().toISOString();
         await this.supabase
-            .schema('core')
             .from('invitations')
-            .update({ accepted_at })
-            .eq('token', token);
+            .update({ status: 'accepted' })
+            .eq('id', invitation.id);
 
         return {
-            acceptedAt: accepted_at,
+            acceptedAt: new Date(),
             invitationStatus: 'accepted'
         }
     }

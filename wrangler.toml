@@ -7,7 +7,7 @@ enabled = true
 
 # Default (no usar en prod)
 [vars]
-SUPABASE_URL = "https://ckcozmrongodmgxcnxap.supabase.co"
+SUPABASE_URL = "https://ambutlpchwroqsgceicw.supabase.co"
 FRONTEND_URL = "http://localhost:5173"
 ENV = "dev"
 
@@ -15,7 +15,7 @@ ENV = "dev"
 name = "backend-store-check-dev"
 
 [env.dev.vars]
-SUPABASE_URL = "https://ckcozmrongodmgxcnxap.supabase.co"
+SUPABASE_URL = "https://ambutlpchwroqsgceicw.supabase.co"
 FRONTEND_URL = "http://localhost:5173"
 ENV = "dev"
 
@@ -23,6 +23,6 @@ ENV = "dev"
 name = "backend-store-check-prod"
 
 [env.prod.vars]
-SUPABASE_URL = "https://ckcozmrongodmgxcnxap.supabase.co"
+SUPABASE_URL = "https://ambutlpchwroqsgceicw.supabase.co"
 FRONTEND_URL = "https://store-check.com"
 ENV = "prod"

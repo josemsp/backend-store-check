@@ -1,20 +1,10 @@
-import { UsersService } from './users.services';
+import { OwnerUserService, RootUserService, UserService } from './users.services';
 import { Context } from 'hono';
-import { mapUserDbToApi } from './users.transforms';
-import { createAnonClient } from '../../infra/supabase/anon.client';
 import { BaseController } from '../../shared/utils/base.controller';
 import { serverError, successResponse } from '../../shared/utils/response';
-import {
-	GetUserSchema,
-	ListProfilesSchema,
-	UpdateUserAPIParamsSchema,
-	UpdateUserAPISchema,
-	UserAPISchema,
-	UserListAPISchema,
-} from './users.schemas';
+import { GetUserSchema, PaginationQuerySchema, UpdateUserSchema, UserListAPISchema, UserProfileViewSchema } from './users.schemas';
 import { AppContext } from '../../shared/supabase/general';
-import { AssignPermissionAPISchema } from '../permissions/permission.schemas';
-import { PermissionService } from '../permissions/permission.services';
+import { UserProfileAPI } from './users.types';
 
 export class GetMeController extends BaseController {
 	schema = {
@@ -22,7 +12,7 @@ export class GetMeController extends BaseController {
 		summary: 'Get a user',
 		operationId: 'getMe',
 		security: [{ bearerAuth: [] }],
-		responses: this.createStandardResponses(UserAPISchema, {
+		responses: this.createStandardResponses(UserProfileViewSchema, {
 			successDescription: 'User profile retrieved successfully',
 			includeAuth: true,
 			include404: true,
@@ -30,9 +20,18 @@ export class GetMeController extends BaseController {
 	};
 
 	async handle(c: Context<AppContext>) {
-		const user = c.get('profile');
-
 		try {
+			let user = c.get('profile');
+
+			if (!user) {
+				const service = new UserService(c.get('supabase'));
+				user = await service.getMe();
+			}
+
+			if (!user) {
+				return c.json({ error: 'Profile not found. Complete your registration.' }, 404);
+			}
+
 			return successResponse(c, user);
 		} catch (error) {
 			console.error('GetMe error:', error);
@@ -49,7 +48,7 @@ export class GetUserController extends BaseController {
 		request: {
 			params: GetUserSchema,
 		},
-		responses: this.createStandardResponses(UserAPISchema, {
+		responses: this.createStandardResponses(UserProfileViewSchema, {
 			successDescription: 'User profile retrieved successfully',
 			includeAuth: true,
 			include404: true,
@@ -57,20 +56,28 @@ export class GetUserController extends BaseController {
 	};
 
 	async handle(c: Context<AppContext>) {
-		const authHeader = c.req.header('Authorization');
-		const service = new UsersService(
-			createAnonClient(c.env, {
-				accessToken: async () => authHeader?.replace('Bearer ', '') || '',
-			}),
-		);
-		const profile = await service.getOne(c.req.param('id'));
+		const supabase = c.get('supabase');
+		const data = await this.getValidatedData<typeof this.schema>();
+
+		let currentUser = c.get('profile');
+		if (!currentUser) {
+			return c.json({ error: 'Profile not found' }, 404);
+		}
+
+		let profile: Partial<UserProfileAPI> | undefined = undefined;
+		if (currentUser.is_root) {
+			const service = new RootUserService(supabase);
+			profile = await service.getUser(data.params.id);
+		} else if (currentUser.role === 'owner') {
+			const service = new OwnerUserService(supabase);
+			profile = await service.getUser(data.params.id);
+		}
 
 		if (!profile) {
 			return c.json({ error: 'User not found' }, 404);
 		}
 
-		const mappedProfile = mapUserDbToApi(profile as any);
-		return successResponse(c, mappedProfile);
+		return successResponse(c, profile);
 	}
 }
 
@@ -81,9 +88,9 @@ export class ListUsersController extends BaseController {
 		operationId: 'listUsers',
 		security: [{ bearerAuth: [] }],
 		request: {
-			params: ListProfilesSchema,
+			params: PaginationQuerySchema,
 		},
-		responses: this.createStandardResponses(UserListAPISchema, {
+		responses: this.createStandardResponses(UserProfileViewSchema, {
 			successDescription: 'Users retrieved',
 			include400: true,
 			includeAuth: true,
@@ -92,15 +99,24 @@ export class ListUsersController extends BaseController {
 	};
 
 	async handle(c: Context<AppContext>) {
-		const authHeader = c.req.header('Authorization');
-		const service = new UsersService(
-			createAnonClient(c.env, {
-				accessToken: async () => authHeader?.replace('Bearer ', '') || '',
-			}),
-		);
-		const profiles = await service.getAll();
-		const mappedProfiles = profiles.map((p: any) => mapUserDbToApi(p));
-		return successResponse(c, mappedProfiles);
+		const supabase = c.get('supabase');
+		const data = await this.getValidatedData<typeof this.schema>();
+
+		let currentUser = c.get('profile');
+		if (!currentUser) {
+			return c.json({ error: 'Profile not found' }, 404);
+		}
+
+		let profiles: any;
+		if (currentUser.is_root) {
+			const service = new RootUserService(supabase);
+			profiles = await service.getAll(data.params);
+		} else if (currentUser.role === 'owner') {
+			const service = new OwnerUserService(supabase);
+			profiles = await service.getAll(data.params);
+		}
+
+		return successResponse(c, profiles);
 	}
 }
 
@@ -109,146 +125,48 @@ export class UpdateUserController extends BaseController {
 		tags: ['Users'],
 		summary: 'Update a user',
 		operationId: 'updateUser',
+		security: [{ bearerAuth: [] }],
 		request: {
-			params: UpdateUserAPIParamsSchema,
-			body: this.createBodySchema(UpdateUserAPISchema),
+			params: GetUserSchema,
+			body: this.createBodySchema(UpdateUserSchema),
 		},
-		responses: this.createStandardResponses(UserAPISchema, {
-			successDescription: 'User updated',
-			include400: true,
+		responses: this.createStandardResponses(UserProfileViewSchema, {
+			successDescription: 'User updated successfully',
 			includeAuth: true,
-			include404: true,
 		}),
 	};
 
 	async handle(c: Context<AppContext>) {
-		const authHeader = c.req.header('Authorization');
-
-		if (!authHeader || !authHeader.startsWith('Bearer ')) {
-			return c.json({ error: 'Unauthorized' }, 401);
-		}
-
-		const supabaseAuth = createAnonClient(c.env);
-		const supabaseDb = createAnonClient(c.env, {
-			db: {
-				schema: 'core',
-			},
-			global: {
-				headers: {
-					Authorization: authHeader,
-				},
-			},
-		});
-		const service = new UsersService(supabaseDb);
-
-		// validate authenticated user
-		const {
-			data: { user },
-			error: authError,
-		} = await supabaseAuth.auth.getUser(authHeader.replace('Bearer ', ''));
-
-		if (authError || !user) {
-			return c.json({ error: 'Invalid token' }, 401);
-		}
-
+		const supabase = c.get('supabase');
+		const currentUser = c.get('profile');
+		const service = new UserService(supabase);
 		const data = await this.getValidatedData<typeof this.schema>();
-		// only allow update if user is owner or admin
-		if (user.id !== data.params.id) {
-			return c.json({ error: 'Forbidden' }, 403);
-		}
-
-		// Transformar de camelCase a snake_case
-		const updatePayload: any = {};
-		if (data.body.email) updatePayload.email = data.body.email;
-		if (data.body.firstName !== undefined) updatePayload.first_name = data.body.firstName;
-		if (data.body.lastName !== undefined) updatePayload.last_name = data.body.lastName;
-		if (data.body.avatarUrl !== undefined) updatePayload.avatar_url = data.body.avatarUrl;
-		if (data.body.status) updatePayload.status = data.body.status;
-		if (data.body.roleId) updatePayload.role_id = data.body.roleId;
 
 		try {
-			await service.update(data.params.id, updatePayload);
+			await service.update(data.params.id, {
+				name: data.body.name ?? undefined,
+				role: data.body.role ?? undefined,
+				avatar_url: data.body.avatar_url ?? undefined,
+				is_active: data.body.is_active ?? undefined,
+			});
 
-			// Obtener el usuario actualizado para devolverlo con el rol actualizado
-			const updatedUser = await service.getOne(data.params.id);
-
-			if (!updatedUser) {
-				return c.json({ error: 'User not found' }, 404);
+			// if (data.body.email) {
+			// 	await supabase.auth.updateUser({email: data.body.email});
+			// }
+			let updatedUser: any;
+			if (currentUser?.is_root) {
+				const serviceRoot = new RootUserService(supabase);
+				updatedUser = await serviceRoot.getUser(data.params.id);
+			} else if (currentUser?.role === 'owner') {
+				const serviceOwner = new OwnerUserService(supabase);
+				updatedUser = await serviceOwner.getUser(data.params.id);
+			} else {
+				updatedUser = await service.getMe();
 			}
 
-			const mappedUpdatedUser = mapUserDbToApi(updatedUser as any);
-			return successResponse(c, mappedUpdatedUser, 'User updated');
+			return successResponse(c, updatedUser, 'User updated');
 		} catch (error) {
-			console.error('UpdateUser error:', error);
 			return serverError(c, error);
 		}
 	}
 }
-
-export class AssignUserPermissionsController extends BaseController {
-	schema = {
-		tags: ['Users'],
-		summary: 'Assign permissions to a user',
-		operationId: 'assignUserPermissions',
-		security: [{ bearerAuth: [] }],
-		request: {
-			params: UpdateUserAPIParamsSchema,
-			body: this.createBodySchema(AssignPermissionAPISchema),
-		},
-		responses: this.createStandardResponses(UserAPISchema, {
-			successDescription: 'User permissions assigned',
-			include400: true,
-			includeAuth: true,
-			include404: true,
-		}),
-	};
-
-	async handle(c: Context<AppContext>) {
-		const authHeader = c.req.header('Authorization');
-		const service = new UsersService(
-			createAnonClient(c.env, {
-				accessToken: async () => authHeader?.replace('Bearer ', '') || '',
-			}),
-		);
-		const servicePermission = new PermissionService(
-			createAnonClient(c.env, {
-				accessToken: async () => authHeader?.replace('Bearer ', '') || '',
-			}),
-		);
-		const data = await this.getValidatedData<typeof this.schema>();
-		await servicePermission.assignPermissions({
-			userId: data.params.id,
-			permissionKeys: data.body.permissionKeys,
-		});
-		const profile = await service.getOne(data.params.id);
-
-		const mappedProfile = mapUserDbToApi(profile as any);
-		return successResponse(c, mappedProfile, 'User permissions assigned');
-	}
-}
-
-// export class CreateUserController extends BaseController {
-//     schema = {
-//         tags: ['Users'],
-//         summary: 'Create a new user',
-//         security: [{ bearerAuth: [] }],
-//         request: {
-//             headers: this.authHeader,
-//             body: this.createBodySchema(CreateUserAPISchema)
-//         },
-//         responses: this.createStandardResponses(UserAPISchema, {
-//             successDescription: "User created",
-//             include400: true,
-//             includeAuth: true,
-//             include404: true
-//         }),
-//     }
-
-//     async handle(c: Context<AppContext>) {
-//         const data = await this.getValidatedData<typeof this.schema>();
-//         const payload = CreateUserDBSchema.parse(data.body)
-//         const service = new UsersService(createAnonClient(c.env));
-//         const result = await service.create(payload);
-//         return c.json(result, 201);
-//     }
-// }
