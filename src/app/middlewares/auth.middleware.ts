@@ -1,6 +1,6 @@
 import { createAnonClient } from '../../infra/supabase/anon.client';
 import { UserService } from '../../modules/users/users.services';
-import { CurrentUserProfileDB, UserAPI } from '../../modules/users/users.types';
+import { CurrentUserProfileDB } from '../../modules/users/users.types';
 import { MiddlewareHandler } from 'hono';
 import { unauthorizedError } from '../../shared/utils/response';
 import { AppContext } from '../../shared/supabase/general';
@@ -25,8 +25,6 @@ export const authMiddleware: MiddlewareHandler<AppContext> = async (c, next) => 
 		data: { user: authUser },
 		error: authError,
 	} = await supabase.auth.getUser(token);
-
-	console.log(authUser);
 
 	if (authError || !authUser) {
 		return unauthorizedError(c);

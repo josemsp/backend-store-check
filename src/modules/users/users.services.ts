@@ -7,7 +7,7 @@ export class RootUserService {
 	constructor(private db: SupabaseClient<Database>) {}
 
 	async getUser(id: string) {
-		const { data, error } = await this.db.from('v_users_full').select('*').eq('id', id).maybeSingle();
+		const { data, error } = await this.db.from('v_users_full').select(`*`).eq('user_id', id).maybeSingle();
 		if (error) throw new Error(error.message);
 		if (!data) return undefined;
 		return data;
@@ -91,8 +91,7 @@ export class UserService {
 	}
 
 	async update(id: string, payload: Partial<UserDB>) {
-		const { error } = await this.db.from('user_profiles').update(payload).eq('id', id).select();
-
+		const { error } = await this.db.from('user_profiles').update(payload).eq('id', id);
 		if (error) throw new Error(error.message);
 	}
 
