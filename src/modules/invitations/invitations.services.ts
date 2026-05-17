@@ -26,7 +26,7 @@ export class InvitationsService {
 			invited_by: invited_by,
 			token,
 			status: 'pending',
-			is_system_invite: false, // normal invitation by the app
+			is_system_invite: false,
 			expires_at: expiresAt,
 		});
 
@@ -44,7 +44,10 @@ export class InvitationsService {
 			},
 		});
 
-		if (error) throw new Error(error.message);
+		if (error) {
+			await this.supabase.from('invitations').delete().eq('token', token);
+			throw new Error(error.message);
+		}
 
 		const actionLink = data.properties.action_link;
 		const resend = new Resend(this.context.env.RESEND_API_KEY);
@@ -57,7 +60,10 @@ export class InvitationsService {
 			react: InvitationEmail({ actionLink, roleName: role as any }),
 		});
 
-		if (response.error) throw new Error(response.error.message);
+		if (response.error) {
+			await this.supabase.from('invitations').delete().eq('token', token);
+			throw new Error(response.error.message);
+		}
 
 		return response.data;
 	}

@@ -1,6 +1,7 @@
 import { OwnerUserService, RootUserService, UserService } from './users.services';
 import { Context } from 'hono';
 import { BaseController } from '../../shared/utils/base.controller';
+import { getProfileFromContext } from '../../shared/utils/profile';
 import { serverError, successResponse } from '../../shared/utils/response';
 import { GetUserSchema, PaginationQuerySchema, UpdateUserRequestSchema, UserProfileViewSchema, UserResponseSchema } from './users.schemas';
 import { AppContext } from '../../shared/supabase/general';
@@ -60,8 +61,10 @@ export class GetUserController extends BaseController {
 		const supabase = c.get('supabase');
 		const data = await this.getValidatedData<typeof this.schema>();
 
-		let currentUser = c.get('profile');
-		if (!currentUser) {
+		let currentUser: Partial<UserProfileAPI> | undefined;
+		try {
+			currentUser = getProfileFromContext(c);
+		} catch {
 			return c.json({ error: 'Profile not found' }, 404);
 		}
 
@@ -103,8 +106,10 @@ export class ListUsersController extends BaseController {
 		const supabase = c.get('supabase');
 		const data = await this.getValidatedData<typeof this.schema>();
 
-		let currentUser = c.get('profile');
-		if (!currentUser) {
+		let currentUser: Partial<UserProfileAPI> | undefined;
+		try {
+			currentUser = getProfileFromContext(c);
+		} catch {
 			return c.json({ error: 'Profile not found' }, 404);
 		}
 

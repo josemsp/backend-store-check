@@ -1,47 +1,39 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '../../shared/supabase/types';
-import { ListOwnersParams, UpdateOwnerFromZod } from './owners.types';
+import { ListOwnersParams, OwnerInsertInput } from './owners.types';
 
 export class OwnersService {
 	constructor(private db: SupabaseClient<Database>) {}
 
 	async getAll() {
-		const { data, error } = await this.db
-			.from('owners')
-			.select('*');
+		const { data, error } = await this.db.from('owners').select('*');
 		if (error) throw new Error(error.message);
 		return data;
 	}
 
 	async getOne(id: string) {
-		const { data, error } = await this.db
-			.from('owners')
-			.select('*')
-			.eq('id', id)
-			.maybeSingle();
+		const { data, error } = await this.db.from('owners').select('*').eq('id', id).maybeSingle();
 		if (error) throw new Error(error.message);
 		return data;
 	}
 
 	async list(params: ListOwnersParams) {
-		const { page, pageSize, search, isActive, sortBy, sortDir } = params;
+		const { page, page_size, search, is_active, sort_by, sort_dir } = params;
 
-		const from = (page - 1) * pageSize;
-		const to = from + pageSize - 1;
+		const from = (page - 1) * page_size;
+		const to = from + page_size - 1;
 
-		let query = this.db
-			.from('owners')
-			.select('*', { count: 'exact' });
+		let query = this.db.from('owners').select('*', { count: 'exact' });
 
 		if (search) {
 			query = query.or(`name.ilike.%${search}%,business_name.ilike.%${search}%,email.ilike.%${search}%`);
 		}
 
-		if (isActive !== undefined) {
-			query = query.eq('is_active', isActive);
+		if (is_active !== undefined) {
+			query = query.eq('is_active', is_active);
 		}
 
-		query = query.order(sortBy, { ascending: sortDir === 'asc' });
+		query = query.order(sort_by, { ascending: sort_dir === 'asc' });
 		query = query.range(from, to);
 
 		const { data, error, count } = await query;
@@ -54,41 +46,29 @@ export class OwnersService {
 			data,
 			meta: {
 				page,
-				pageSize,
+				page_size,
 				total: count ?? 0,
-				totalPages: Math.ceil((count ?? 0) / pageSize),
+				total_pages: Math.ceil((count ?? 0) / page_size),
 			},
 		};
 	}
 
-	async create(payload: { name: string; email: string; phone?: string | null; business_name: string; logo_url?: string | null }) {
-		const { data, error } = await this.db
-			.from('owners')
-			.insert(payload)
-			.select()
-			.single();
+	async create(payload: OwnerInsertInput) {
+		const { data, error } = await this.db.from('owners').insert(payload).select().single();
 
 		if (error) throw new Error(error.message);
 		return data;
 	}
 
-	async update(id: string, payload: UpdateOwnerFromZod) {
-		const { data, error } = await this.db
-			.from('owners')
-			.update(payload)
-			.eq('id', id)
-			.select()
-			.single();
+	async update(id: string, payload: Omit<Partial<OwnerInsertInput>, 'id'>) {
+		const { data, error } = await this.db.from('owners').update(payload).eq('id', id).select().single();
 
 		if (error) throw new Error(error.message);
 		return data;
 	}
 
 	async delete(id: string) {
-		const { error } = await this.db
-			.from('owners')
-			.delete()
-			.eq('id', id);
+		const { error } = await this.db.from('owners').delete().eq('id', id);
 
 		if (error) throw new Error(error.message);
 		return true;

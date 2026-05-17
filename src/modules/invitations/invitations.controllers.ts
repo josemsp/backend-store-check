@@ -1,5 +1,6 @@
 import { Context } from 'hono';
 import { BaseController } from '../../shared/utils/base.controller';
+import { getProfileFromContext } from '../../shared/utils/profile';
 import { serverError, successResponse, validationError } from '../../shared/utils/response';
 import {
 	AcceptInvitationRequestSchema,
@@ -12,6 +13,7 @@ import { extractBearerToken } from '../../shared/supabase/helpers';
 import { createAdminClient } from '../../infra/supabase/admin.client';
 import { ZodError } from 'zod';
 import { InvitationsService } from './invitations.services';
+import { OwnersService } from '../owners/owners.services';
 
 export class InviteUserController extends BaseController {
 	schema = {
@@ -36,21 +38,40 @@ export class InviteUserController extends BaseController {
 			const service = new InvitationsService(supabaseAdmin, c);
 			const payload = data.body;
 
-			const profile = c.get('profile');
-			if (!profile) {
-				return serverError(c, 'Profile not found');
+			const profile = getProfileFromContext(c);
+
+			let createdOwnerId: string | null = null;
+			if (profile.is_root && payload.role === 'owner') {
+				const serviceOwner = new OwnersService(supabaseAdmin);
+
+				const dataOwner = await serviceOwner.create({
+					email: payload.email,
+					name: profile.email ?? '',
+					business_name: '',
+				});
+				createdOwnerId = dataOwner.id;
 			}
 
-			await service.createInvitation({
-				userData: {
-					email: payload.email,
-					owner_id: profile.owner_id!,
-					invited_by: profile.user_id!,
-					role: payload.role,
-					branch_id: payload.branch_id ?? undefined,
-				},
-				redirectTo: c.env.FRONTEND_URL + '/onboarding',
-			});
+			const owner_id = createdOwnerId ?? profile.owner_id!;
+
+			try {
+				await service.createInvitation({
+					userData: {
+						email: payload.email,
+						owner_id,
+						invited_by: profile.user_id!,
+						role: payload.role,
+						branch_id: payload.branch_id ?? undefined,
+					},
+					redirectTo: c.env.FRONTEND_URL + '/onboarding',
+				});
+			} catch (error) {
+				if (createdOwnerId) {
+					const serviceOwner = new OwnersService(supabaseAdmin);
+					await serviceOwner.delete(createdOwnerId);
+				}
+				throw error;
+			}
 
 			return successResponse(c, 'User invited successfully');
 		} catch (error) {
