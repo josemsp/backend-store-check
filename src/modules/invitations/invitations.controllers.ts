@@ -44,12 +44,17 @@ export class InviteUserController extends BaseController {
 			if (profile.is_root && payload.role === 'owner') {
 				const serviceOwner = new OwnersService(supabaseAdmin);
 
-				const dataOwner = await serviceOwner.create({
-					email: payload.email,
-					name: profile.email ?? '',
-					business_name: '',
-				});
-				createdOwnerId = dataOwner.id;
+				const existingOwner = await serviceOwner.getByEmail(payload.email);
+				if (existingOwner) {
+					createdOwnerId = existingOwner.id;
+				} else {
+					const dataOwner = await serviceOwner.create({
+						email: payload.email,
+						name: profile.email ?? '',
+						business_name: '',
+					});
+					createdOwnerId = dataOwner.id;
+				}
 			}
 
 			const owner_id = createdOwnerId ?? profile.owner_id!;

@@ -53,6 +53,12 @@ export class OwnersService {
 		};
 	}
 
+	async getByEmail(email: string) {
+		const { data, error } = await this.db.from('owners').select('id').eq('email', email).maybeSingle();
+		if (error) throw new Error(error.message);
+		return data;
+	}
+
 	async create(payload: OwnerInsertInput) {
 		const { data, error } = await this.db.from('owners').insert(payload).select().single();
 

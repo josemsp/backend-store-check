@@ -18,19 +18,42 @@ export class InvitationsService {
 		const token = crypto.randomUUID();
 		const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
-		const { error: insertError } = await this.supabase.from('invitations').insert({
-			email,
-			owner_id: owner_id,
-			branch_id: branch_id ?? undefined,
-			role,
-			invited_by: invited_by,
-			token,
-			status: 'pending',
-			is_system_invite: false,
-			expires_at: expiresAt,
-		});
+		const { data: existing } = await this.supabase
+			.from('invitations')
+			.select('id')
+			.eq('email', email)
+			.eq('owner_id', owner_id)
+			.eq('status', 'pending')
+			.maybeSingle();
 
-		if (insertError) throw new Error(insertError.message);
+		if (existing) {
+			const { error: updateError } = await this.supabase
+				.from('invitations')
+				.update({
+					token,
+					expires_at: expiresAt,
+					invited_by,
+					role,
+					branch_id: branch_id ?? null,
+				})
+				.eq('id', existing.id);
+
+			if (updateError) throw new Error(updateError.message);
+		} else {
+			const { error: insertError } = await this.supabase.from('invitations').insert({
+				email,
+				owner_id: owner_id,
+				branch_id: branch_id ?? undefined,
+				role,
+				invited_by: invited_by,
+				token,
+				status: 'pending',
+				is_system_invite: false,
+				expires_at: expiresAt,
+			});
+
+			if (insertError) throw new Error(insertError.message);
+		}
 
 		const { data, error } = await this.supabase.auth.admin.generateLink({
 			type: 'magiclink',
