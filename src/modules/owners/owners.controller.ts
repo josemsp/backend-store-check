@@ -1,7 +1,7 @@
 import { OwnersService } from './owners.services';
 import { Context } from 'hono';
 import { BaseController } from '../../shared/utils/base.controller';
-import { notFoundError, serverError, successResponse } from '../../shared/utils/response';
+import { notFoundError, serverError, successPaginatedResponse, successResponse } from '../../shared/utils/response';
 import {
 	GetOwnerSchema,
 	ListOwnersSchema,
@@ -67,7 +67,7 @@ export class ListOwnersController extends BaseController {
 			const data = await this.getValidatedData<typeof this.schema>();
 			const service = new OwnersService(c.get('supabase'));
 			const result = await service.list(data.query);
-			return successResponse(c, result);
+			return successPaginatedResponse(c, result.data, result.meta, 'Owners retrieved successfully');
 		} catch (error) {
 			return serverError(c, error);
 		}
