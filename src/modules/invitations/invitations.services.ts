@@ -59,7 +59,7 @@ export class InvitationsService {
 			type: 'magiclink',
 			email,
 			options: {
-				redirectTo,
+				redirectTo: `${redirectTo}?token=${token}`,
 				data: {
 					owner_id: owner_id,
 					role,
