@@ -26,6 +26,7 @@ import { stockAlertsPlugin } from './modules/stock-alerts/stock-alerts.plugin';
 import { notificationsPlugin } from './modules/notifications/notifications.plugin';
 import { ownerRelationshipsPlugin } from './modules/owner-relationships/owner-relationships.plugin';
 import { ownerTransfersPlugin } from './modules/owner-transfers/owner-transfers.plugin';
+import { onboardingPlugin } from './modules/onboarding/onboarding.plugin';
 
 const app = createWorkerApp([
 	// public routes
@@ -35,6 +36,7 @@ const app = createWorkerApp([
 	invitationsPluginPrivate,
 	usersPlugin,
 	ownersPlugin,
+	onboardingPlugin,
 	// branchesPlugin,
 	// productsPlugin,
 	// productCategoriesPlugin,
