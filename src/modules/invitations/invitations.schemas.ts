@@ -1,4 +1,4 @@
-import z from 'zod';
+import z, { success } from 'zod';
 import { RoleEnum } from '../users/users.schemas';
 
 export const InvitationStatusEnum = z.enum(['pending', 'accepted', 'expired']);
@@ -36,6 +36,11 @@ export const ValidateInvitationRequestSchema = z.object({
 });
 
 export const ValidateInvitationResponseSchema = z.object({
-	email: z.email(),
-	role: RoleEnum,
+	success: z.literal(true),
+	message: z.string().optional(),
+	data: z.object({
+		email: z.email(),
+		role: RoleEnum,
+	}),
+	meta: z.object({ timestamp: z.iso.datetime({ offset: true }) }),
 });
