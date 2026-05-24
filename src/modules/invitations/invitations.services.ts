@@ -63,6 +63,7 @@ export class InvitationsService {
 				data: {
 					owner_id: owner_id,
 					role,
+					invitation_token: token,
 				},
 			},
 		});
