@@ -1,7 +1,7 @@
 import { Context } from 'hono';
 import { BaseController } from '../../shared/utils/base.controller';
 import { getProfileFromContext } from '../../shared/utils/profile';
-import { serverError, successResponse, validationError } from '../../shared/utils/response';
+import { successResponse } from '../../shared/utils/response';
 import { AppContext } from '../../shared/supabase/general';
 import {
 	CompanyInfoSchema,
@@ -10,7 +10,7 @@ import {
 	ProfileInfoSchema,
 } from './onboarding.schemas';
 import { OnboardingService } from './onboarding.services';
-import { ZodError } from 'zod';
+
 
 export class UpdateCompanyController extends BaseController {
 	schema = {
@@ -28,21 +28,14 @@ export class UpdateCompanyController extends BaseController {
 	};
 
 	async handle(c: Context<AppContext>) {
-		try {
-			const data = await this.getValidatedData<typeof this.schema>();
-			const profile = getProfileFromContext(c);
-			const service = new OnboardingService(c.get('supabase'));
+		const data = await this.getValidatedData<typeof this.schema>();
+		const profile = getProfileFromContext(c);
+		const service = new OnboardingService(c.get('supabase'));
 
-			const ownerId = profile.owner_id!;
-			await service.updateCompany(ownerId, data.body);
+		const ownerId = profile.owner_id!;
+		await service.updateCompany(ownerId, data.body);
 
-			return successResponse(c, null, 'Company info updated');
-		} catch (error) {
-			if (error instanceof ZodError) {
-				return validationError(c, error);
-			}
-			return serverError(c, error);
-		}
+		return successResponse(c, null, 'Company info updated');
 	}
 }
 
@@ -62,20 +55,13 @@ export class UpdateProfileController extends BaseController {
 	};
 
 	async handle(c: Context<AppContext>) {
-		try {
-			const data = await this.getValidatedData<typeof this.schema>();
-			const profile = getProfileFromContext(c);
-			const service = new OnboardingService(c.get('supabase'));
+		const data = await this.getValidatedData<typeof this.schema>();
+		const profile = getProfileFromContext(c);
+		const service = new OnboardingService(c.get('supabase'));
 
-			await service.updateProfile(profile.user_id!, data.body);
+		await service.updateProfile(profile.user_id!, data.body);
 
-			return successResponse(c, null, 'Profile updated');
-		} catch (error) {
-			if (error instanceof ZodError) {
-				return validationError(c, error);
-			}
-			return serverError(c, error);
-		}
+		return successResponse(c, null, 'Profile updated');
 	}
 }
 
@@ -95,20 +81,13 @@ export class UpdatePreferencesController extends BaseController {
 	};
 
 	async handle(c: Context<AppContext>) {
-		try {
-			const data = await this.getValidatedData<typeof this.schema>();
-			const profile = getProfileFromContext(c);
-			const service = new OnboardingService(c.get('supabase'));
+		const data = await this.getValidatedData<typeof this.schema>();
+		const profile = getProfileFromContext(c);
+		const service = new OnboardingService(c.get('supabase'));
 
-			await service.savePreferences(profile.user_id!, data.body);
+		await service.savePreferences(profile.user_id!, data.body);
 
-			return successResponse(c, null, 'Preferences saved');
-		} catch (error) {
-			if (error instanceof ZodError) {
-				return validationError(c, error);
-			}
-			return serverError(c, error);
-		}
+		return successResponse(c, null, 'Preferences saved');
 	}
 }
 
@@ -125,18 +104,14 @@ export class GetOnboardingStatusController extends BaseController {
 	};
 
 	async handle(c: Context<AppContext>) {
-		try {
-			const profile = getProfileFromContext(c);
-			const service = new OnboardingService(c.get('supabase'));
+		const profile = getProfileFromContext(c);
+		const service = new OnboardingService(c.get('supabase'));
 
-			const status = await service.getStatus(
-				profile.owner_id,
-				profile.user_id!,
-			);
+		const status = await service.getStatus(
+			profile.owner_id,
+			profile.user_id!,
+		);
 
-			return successResponse(c, status, 'Onboarding status retrieved');
-		} catch (error) {
-			return serverError(c, error);
-		}
+		return successResponse(c, status, 'Onboarding status retrieved');
 	}
 }

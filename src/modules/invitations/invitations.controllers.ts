@@ -1,7 +1,7 @@
 import { Context } from 'hono';
 import { BaseController } from '../../shared/utils/base.controller';
 import { getProfileFromContext } from '../../shared/utils/profile';
-import { serverError, successResponse, validationError } from '../../shared/utils/response';
+import { successResponse, validationError } from '../../shared/utils/response';
 import {
 	AcceptInvitationRequestSchema,
 	InviteUserRequestSchema,
@@ -11,7 +11,6 @@ import {
 import { AppContext } from '../../shared/supabase/general';
 import { extractBearerToken } from '../../shared/supabase/helpers';
 import { createAdminClient } from '../../infra/supabase/admin.client';
-import { ZodError } from 'zod';
 import { InvitationsService } from './invitations.services';
 import { OwnersService } from '../owners/owners.services';
 
@@ -32,59 +31,52 @@ export class InviteUserController extends BaseController {
 	};
 
 	async handle(c: Context<AppContext>) {
-		try {
-			const data = await this.getValidatedData<typeof this.schema>();
-			const supabaseAdmin = createAdminClient(c.env);
-			const service = new InvitationsService(supabaseAdmin, c);
-			const payload = data.body;
+		const data = await this.getValidatedData<typeof this.schema>();
+		const supabaseAdmin = createAdminClient(c.env);
+		const service = new InvitationsService(supabaseAdmin, c);
+		const payload = data.body;
 
-			const profile = getProfileFromContext(c);
+		const profile = getProfileFromContext(c);
 
-			let createdOwnerId: string | null = null;
-			if (profile.is_root && payload.role === 'owner') {
-				const serviceOwner = new OwnersService(supabaseAdmin);
+		let createdOwnerId: string | null = null;
+		if (profile.is_root && payload.role === 'owner') {
+			const serviceOwner = new OwnersService(supabaseAdmin);
 
-				const existingOwner = await serviceOwner.getByEmail(payload.email);
-				if (existingOwner) {
-					createdOwnerId = existingOwner.id;
-				} else {
-					const dataOwner = await serviceOwner.create({
-						email: payload.email,
-						name: profile.email ?? '',
-						business_name: '',
-					});
-					createdOwnerId = dataOwner.id;
-				}
-			}
-
-			const owner_id = createdOwnerId ?? profile.owner_id!;
-
-			try {
-				await service.createInvitation({
-					userData: {
-						email: payload.email,
-						owner_id,
-						invited_by: profile.user_id!,
-						role: payload.role,
-						branch_id: payload.branch_id ?? undefined,
-					},
-					redirectTo: c.env.FRONTEND_URL + '/onboarding',
+			const existingOwner = await serviceOwner.getByEmail(payload.email);
+			if (existingOwner) {
+				createdOwnerId = existingOwner.id;
+			} else {
+				const dataOwner = await serviceOwner.create({
+					email: payload.email,
+					name: profile.email ?? '',
+					business_name: '',
 				});
-			} catch (error) {
-				if (createdOwnerId) {
-					const serviceOwner = new OwnersService(supabaseAdmin);
-					await serviceOwner.delete(createdOwnerId);
-				}
-				throw error;
+				createdOwnerId = dataOwner.id;
 			}
-
-			return successResponse(c, 'User invited successfully');
-		} catch (error) {
-			if (error instanceof ZodError) {
-				return validationError(c, error);
-			}
-			return serverError(c, error);
 		}
+
+		const owner_id = createdOwnerId ?? profile.owner_id!;
+
+		try {
+			await service.createInvitation({
+				userData: {
+					email: payload.email,
+					owner_id,
+					invited_by: profile.user_id!,
+					role: payload.role,
+					branch_id: payload.branch_id ?? undefined,
+				},
+				redirectTo: c.env.FRONTEND_URL + '/onboarding',
+			});
+		} catch (error) {
+			if (createdOwnerId) {
+				const serviceOwner = new OwnersService(supabaseAdmin);
+				await serviceOwner.delete(createdOwnerId);
+			}
+			throw error;
+		}
+
+		return successResponse(c, 'User invited successfully');
 	}
 }
 
@@ -105,21 +97,14 @@ export class ValidateInvitationController extends BaseController {
 	};
 
 	async handle(c: Context<AppContext>) {
-		try {
-			const data = await this.getValidatedData<typeof this.schema>();
-			const { token } = data.body;
-			const supabase = createAdminClient(c.env);
-			const service = new InvitationsService(supabase, c);
+		const data = await this.getValidatedData<typeof this.schema>();
+		const { token } = data.body;
+		const supabase = createAdminClient(c.env);
+		const service = new InvitationsService(supabase, c);
 
-			const validationData = await service.validateInvitation(token);
+		const validationData = await service.validateInvitation(token);
 
-			return successResponse(c, validationData, 'Invitation validated successfully');
-		} catch (error) {
-			if (error instanceof ZodError) {
-				return validationError(c, error);
-			}
-			return serverError(c, error);
-		}
+		return successResponse(c, validationData, 'Invitation validated successfully');
 	}
 }
 
@@ -140,44 +125,37 @@ export class AcceptInvitationController extends BaseController {
 	};
 
 	async handle(c: Context<AppContext>) {
-		try {
-			const data = await this.getValidatedData<typeof this.schema>();
-			const supabaseAdmin = createAdminClient(c.env);
-			const service = new InvitationsService(supabaseAdmin, c);
-			const payload = data.body;
+		const data = await this.getValidatedData<typeof this.schema>();
+		const supabaseAdmin = createAdminClient(c.env);
+		const service = new InvitationsService(supabaseAdmin, c);
+		const payload = data.body;
 
-			const token = extractBearerToken(c.req.header('Authorization'));
-			if (!token) {
-				return validationError(c, 'No token provided');
-			}
-			const {
-				data: { user },
-				error: authError,
-			} = await supabaseAdmin.auth.getUser(token);
-			if (authError || !user) {
-				return validationError(c, 'User not found');
-			}
-
-			const result = await service.acceptInvitation({
-				user_id: user.id,
-				email: user.email!,
-				owner_id: user.user_metadata?.owner_id,
-				name: user.user_metadata?.name ?? user.email!.split('@')[0],
-				role: user.user_metadata?.role ?? 'branch_staff',
-				branch_id: user.user_metadata?.branch_id ?? undefined,
-				phone: user.user_metadata?.phone ?? null,
-				avatar_url: payload.avatar_url ?? null,
-				// owner
-				business_name: payload.business_name,
-				logo_url: payload.logo_url,
-			});
-
-			return successResponse(c, result, 'Invitation accepted successfully');
-		} catch (error) {
-			if (error instanceof ZodError) {
-				return validationError(c, error);
-			}
-			return serverError(c, error);
+		const token = extractBearerToken(c.req.header('Authorization'));
+		if (!token) {
+			return validationError(c, 'No token provided');
 		}
+		const {
+			data: { user },
+			error: authError,
+		} = await supabaseAdmin.auth.getUser(token);
+		if (authError || !user) {
+			return validationError(c, 'User not found');
+		}
+
+		const result = await service.acceptInvitation({
+			user_id: user.id,
+			email: user.email!,
+			owner_id: user.user_metadata?.owner_id,
+			name: user.user_metadata?.name ?? user.email!.split('@')[0],
+			role: user.user_metadata?.role ?? 'branch_staff',
+			branch_id: user.user_metadata?.branch_id ?? undefined,
+			phone: user.user_metadata?.phone ?? null,
+			avatar_url: payload.avatar_url ?? null,
+			// owner
+			business_name: payload.business_name,
+			logo_url: payload.logo_url,
+		});
+
+		return successResponse(c, result, 'Invitation accepted successfully');
 	}
 }

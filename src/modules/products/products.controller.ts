@@ -2,7 +2,7 @@ import { Context } from 'hono';
 import z from 'zod';
 import { BaseController } from '../../shared/utils/base.controller';
 import { ProductsService } from './products.service';
-import { successResponse, serverError } from '../../shared/utils/response';
+import { successResponse } from '../../shared/utils/response';
 import { AppContext } from '../../shared/supabase/general';
 import { CreateProductSchema, ProductSchema, ListProductsSchema, UpdateProductSchema } from './products.validators';
 
@@ -22,14 +22,10 @@ export class ListProductsController extends BaseController {
     }
 
     async handle(c: Context<AppContext>) {
-        try {
-            const query = c.req.valid('query');
-            const service = new ProductsService(c.get('supabase'));
-            const result = await service.list(query);
-            return successResponse(c, { data: result.data, meta: result.meta });
-        } catch (error) {
-            return serverError(c, error);
-        }
+        const query = c.req.valid('query');
+        const service = new ProductsService(c.get('supabase'));
+        const result = await service.list(query);
+        return successResponse(c, { data: result.data, meta: result.meta });
     }
 }
 
@@ -50,16 +46,12 @@ export class GetProductController extends BaseController {
     }
 
     async handle(c: Context<AppContext>) {
-        try {
-            const service = new ProductsService(c.get('supabase'));
-            const product = await service.getOne(c.req.param('id'));
-            if (!product) {
-                return c.json({ error: 'Product not found' }, 404);
-            }
-            return successResponse(c, product);
-        } catch (error) {
-            return serverError(c, error);
+        const service = new ProductsService(c.get('supabase'));
+        const product = await service.getOne(c.req.param('id'));
+        if (!product) {
+            return c.json({ error: 'Product not found' }, 404);
         }
+        return successResponse(c, product);
     }
 }
 
@@ -80,14 +72,10 @@ export class CreateProductController extends BaseController {
     }
 
     async handle(c: Context<AppContext>) {
-        try {
-            const data = await this.getValidatedData<typeof this.schema>();
-            const service = new ProductsService(c.get('supabase'));
-            const product = await service.create(data.body);
-            return successResponse(c, product, 'Product created');
-        } catch (error) {
-            return serverError(c, error);
-        }
+        const data = await this.getValidatedData<typeof this.schema>();
+        const service = new ProductsService(c.get('supabase'));
+        const product = await service.create(data.body);
+        return successResponse(c, product, 'Product created');
     }
 }
 
@@ -110,14 +98,10 @@ export class UpdateProductController extends BaseController {
     }
 
     async handle(c: Context<AppContext>) {
-        try {
-            const data = await this.getValidatedData<typeof this.schema>();
-            const service = new ProductsService(c.get('supabase'));
-            const product = await service.update(c.req.param('id'), data.body);
-            return successResponse(c, product, 'Product updated');
-        } catch (error) {
-            return serverError(c, error);
-        }
+        const data = await this.getValidatedData<typeof this.schema>();
+        const service = new ProductsService(c.get('supabase'));
+        const product = await service.update(c.req.param('id'), data.body);
+        return successResponse(c, product, 'Product updated');
     }
 }
 
@@ -138,12 +122,8 @@ export class DeleteProductController extends BaseController {
     }
 
     async handle(c: Context<AppContext>) {
-        try {
-            const service = new ProductsService(c.get('supabase'));
-            await service.delete(c.req.param('id'));
-            return successResponse(c, null, 'Product deleted');
-        } catch (error) {
-            return serverError(c, error);
-        }
+        const service = new ProductsService(c.get('supabase'));
+        await service.delete(c.req.param('id'));
+        return successResponse(c, null, 'Product deleted');
     }
 }

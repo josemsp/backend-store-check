@@ -5,6 +5,8 @@ import { AppContext } from '../../shared/supabase/general';
 import { Resend } from 'resend';
 import { InvitationEmail } from '../../infra/email/templates/Invitation';
 import { AcceptInvitationInput, InviteUserInput } from './invitations.types';
+import { HTTPException } from 'hono/http-exception';
+import { errorResponse, validationError } from '../../shared/utils/response';
 
 export class InvitationsService {
 	constructor(
@@ -99,13 +101,31 @@ export class InvitationsService {
 			.eq('token', token)
 			.maybeSingle();
 
-		if (error) throw new Error(error.message);
+		if (error) {
+			throw new HTTPException(400, {
+				res: errorResponse(this.context, 'DATABASE_ERROR', error.message, 400),
+			});
+		}
 
-		if (!data) throw new Error('Invitation not found');
+		if (!data) {
+			throw new HTTPException(404, {
+				res: errorResponse(this.context, 'NOT_FOUND', 'Invitation not found', 404),
+			});
+		}
 
-		if (data.status === 'accepted') throw new Error('Invitation already accepted');
+		if (data.status === 'accepted') {
+			throw new HTTPException(400, {
+				res: errorResponse(this.context, 'INVITATION_ALREADY_ACCEPTED', 'Invitation already accepted', 400),
+			});
+		}
 
-		if (data.expires_at && data.expires_at < new Date().toISOString()) throw new Error('Invitation expired');
+		if (data.expires_at && data.expires_at < new Date().toISOString()) {
+			throw new HTTPException(400, {
+				res: validationError(this.context, {
+					expires_at: 'Invitation expired',
+				}),
+			});
+		}
 
 		return {
 			email: data.email,
@@ -125,12 +145,16 @@ export class InvitationsService {
 			.single();
 
 		if (invitationError || !invitation) {
-			throw new Error('No pending invitation found');
+			throw new HTTPException(404, {
+				res: errorResponse(this.context, 'NOT_FOUND', 'No pending invitation found', 404),
+			});
 		}
 
 		if (invitation.expires_at && new Date(invitation.expires_at) < new Date()) {
 			await this.supabase.from('invitations').update({ status: 'expired' }).eq('id', invitation.id);
-			throw new Error('Invitation has expired');
+			throw new HTTPException(400, {
+				res: errorResponse(this.context, 'INVITATION_EXPIRED', 'Invitation has expired', 400),
+			});
 		}
 
 		const { error: profileError } = await this.supabase.from('user_profiles').upsert({

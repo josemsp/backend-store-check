@@ -1,7 +1,7 @@
 import { OwnersService } from './owners.services';
 import { Context } from 'hono';
 import { BaseController } from '../../shared/utils/base.controller';
-import { notFoundError, serverError, successPaginatedResponse, successResponse } from '../../shared/utils/response';
+import { notFoundError, successPaginatedResponse, successResponse } from '../../shared/utils/response';
 import {
 	GetOwnerSchema,
 	ListOwnersSchema,
@@ -30,19 +30,15 @@ export class GetOwnerController extends BaseController {
 	};
 
 	async handle(c: Context<AppContext>) {
-		try {
-			const data = await this.getValidatedData<typeof this.schema>();
-			const service = new OwnersService(c.get('supabase'));
-			const owner = await service.getOne(data.params.id);
+		const data = await this.getValidatedData<typeof this.schema>();
+		const service = new OwnersService(c.get('supabase'));
+		const owner = await service.getOne(data.params.id);
 
-			if (!owner) {
-				return notFoundError(c, 'Owner not found');
-			}
-
-			return successResponse(c, owner);
-		} catch (error) {
-			return serverError(c, error);
+		if (!owner) {
+			return notFoundError(c, 'Owner not found');
 		}
+
+		return successResponse(c, owner);
 	}
 }
 
@@ -63,14 +59,10 @@ export class ListOwnersController extends BaseController {
 	};
 
 	async handle(c: Context<AppContext>) {
-		try {
-			const data = await this.getValidatedData<typeof this.schema>();
-			const service = new OwnersService(c.get('supabase'));
-			const result = await service.list(data.query);
-			return successPaginatedResponse(c, result.data, result.meta, 'Owners retrieved successfully');
-		} catch (error) {
-			return serverError(c, error);
-		}
+		const data = await this.getValidatedData<typeof this.schema>();
+		const service = new OwnersService(c.get('supabase'));
+		const result = await service.list(data.query);
+		return successPaginatedResponse(c, result.data, result.meta, 'Owners retrieved successfully');
 	}
 }
 
@@ -91,15 +83,11 @@ export class CreateOwnerController extends BaseController {
 	};
 
 	async handle(c: Context<AppContext>) {
-		try {
-			const data = await this.getValidatedData<typeof this.schema>();
-			const payload = data.body;
-			const service = new OwnersService(c.get('supabase'));
-			const result = await service.create(payload);
-			return successResponse(c, result);
-		} catch (error) {
-			return serverError(c, error);
-		}
+		const data = await this.getValidatedData<typeof this.schema>();
+		const payload = data.body;
+		const service = new OwnersService(c.get('supabase'));
+		const result = await service.create(payload);
+		return successResponse(c, result);
 	}
 }
 
@@ -121,22 +109,18 @@ export class UpdateOwnerController extends BaseController {
 	};
 
 	async handle(c: Context<AppContext>) {
-		try {
-			const data = await this.getValidatedData<typeof this.schema>();
-			const service = new OwnersService(c.get('supabase'));
+		const data = await this.getValidatedData<typeof this.schema>();
+		const service = new OwnersService(c.get('supabase'));
 
-			const updatePayload: OwnerUpdateInput = {};
-			if (data.body.name !== undefined) updatePayload.name = data.body.name;
-			if (data.body.email !== undefined) updatePayload.email = data.body.email;
-			if (data.body.phone !== undefined) updatePayload.phone = data.body.phone;
-			if (data.body.business_name !== undefined) updatePayload.business_name = data.body.business_name;
-			if (data.body.logo_url !== undefined) updatePayload.logo_url = data.body.logo_url;
-			if (data.body.is_active !== undefined) updatePayload.is_active = data.body.is_active;
+		const updatePayload: OwnerUpdateInput = {};
+		if (data.body.name !== undefined) updatePayload.name = data.body.name;
+		if (data.body.email !== undefined) updatePayload.email = data.body.email;
+		if (data.body.phone !== undefined) updatePayload.phone = data.body.phone;
+		if (data.body.business_name !== undefined) updatePayload.business_name = data.body.business_name;
+		if (data.body.logo_url !== undefined) updatePayload.logo_url = data.body.logo_url;
+		if (data.body.is_active !== undefined) updatePayload.is_active = data.body.is_active;
 
-			const result = await service.update(data.params.id, updatePayload);
-			return successResponse(c, result, 'Owner updated');
-		} catch (error) {
-			return serverError(c, error);
-		}
+		const result = await service.update(data.params.id, updatePayload);
+		return successResponse(c, result, 'Owner updated');
 	}
 }

@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { HealthService } from './health.service';
 import { AppContext } from '../../shared/supabase/general';
 import { BaseController } from '../../shared/utils/base.controller';
-import { serverError, successResponse } from '../../shared/utils/response';
+import { successResponse } from '../../shared/utils/response';
 import { createAdminClient } from '../../infra/supabase/admin.client';
 
 const HealthCheckAPISchema = z.object({
@@ -28,12 +28,8 @@ export class HealthCheckController extends BaseController {
 		const supabase = createAdminClient(c.env);
 		const service = new HealthService(supabase);
 
-		try {
-			const dbStatus = await service.checkDatabase();
+		const dbStatus = await service.checkDatabase();
 
-			return successResponse(c, { database: dbStatus });
-		} catch (error: any) {
-			return serverError(c, error);
-		}
+		return successResponse(c, { database: dbStatus });
 	}
 }

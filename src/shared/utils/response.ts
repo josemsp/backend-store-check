@@ -1,4 +1,6 @@
 import { Context } from 'hono';
+import { HTTPException } from 'hono/http-exception';
+import { ZodError } from 'zod';
 import { ApiResponse } from '../types';
 import { ContentfulStatusCode } from 'hono/utils/http-status';
 import { AppContext } from '../supabase/general';
@@ -75,6 +77,15 @@ export function forbiddenError(c: Context<AppContext>, message = 'Access denied'
 }
 
 export function serverError(c: Context<AppContext>, error?: any): Response {
-	console.error('Server error:', error);
 	return errorResponse(c, 'INTERNAL_ERROR', 'An internal error occurred', 500, c.env?.ENV === 'dev' ? error : undefined);
+}
+
+export function handleControllerError(c: Context<AppContext>, error: unknown): Response {
+	if (error instanceof ZodError) {
+		return validationError(c, error);
+	}
+	if (error instanceof HTTPException) {
+		return error.getResponse();
+	}
+	return serverError(c, error);
 }
